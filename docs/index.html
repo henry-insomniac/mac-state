@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>mac-state 1.0.0</title>
+    <meta
+      name="description"
+      content="mac-state 是一个原生 macOS 菜单栏状态监测工具，强调轻量、实时、可配置，以及更克制的桌面体验。"
+    />
+    <meta name="theme-color" content="#111613" />
+    <link rel="icon" type="image/png" href="branding/mac-state-logo-1024.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/site.css" />
+    <script src="assets/site.js" defer></script>
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="topbar">
+        <a class="brand" href="#top" aria-label="mac-state home">
+          <img src="branding/mac-state-logo-1024.png" alt="mac-state logo" />
+          <span>mac-state</span>
+        </a>
+
+        <div class="topbar-actions">
+          <nav class="topnav" aria-label="Primary">
+            <a href="#features" data-i18n="navFeatures">功能</a>
+            <a href="#modules" data-i18n="navModules">模块</a>
+            <a href="#download" data-i18n="navDownload">下载</a>
+            <a href="https://github.com/henry-insomniac/mac-state">GitHub</a>
+          </nav>
+
+          <div class="language-switch" role="group" aria-label="Language switch">
+            <button type="button" class="language-button is-active" data-language-button="zh-CN">中文</button>
+            <button type="button" class="language-button" data-language-button="en">EN</button>
+          </div>
+        </div>
+      </header>
+
+      <main id="top">
+        <section class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow" data-i18n="eyebrowVersion">版本 1.0.0</p>
+            <h1 data-i18n="heroTitle">一个原生的 macOS 菜单栏状态监测工具，轻、准、可控。</h1>
+            <p class="lede" data-i18n="heroLede">
+              mac-state 把实时系统指标放回菜单栏该有的位置。先看最关键的信息，再按需打开细节，不把桌面变成一个喧闹的大屏监控台。
+            </p>
+
+            <div class="hero-actions">
+              <a class="button button-primary" href="https://github.com/henry-insomniac/mac-state" data-i18n="heroPrimaryCta">查看源码</a>
+              <a class="button button-secondary" href="https://github.com/henry-insomniac/mac-state/releases" data-i18n="heroSecondaryCta">发布构建</a>
+            </div>
+
+            <ul class="signal-rail" aria-label="Highlights">
+              <li data-i18n="highlightOne">macOS 11+</li>
+              <li data-i18n="highlightTwo">Intel + Apple Silicon</li>
+              <li data-i18n="highlightThree">菜单栏优先</li>
+              <li data-i18n="highlightFour">模块可配置</li>
+            </ul>
+          </div>
+
+          <div class="hero-stage" aria-hidden="true">
+            <div class="stage-card stage-card-primary">
+              <div class="stage-window-bar">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <div class="stage-grid">
+                <div class="stage-panel stage-panel-icon">
+                  <img src="branding/mac-state-logo-1024.png" alt="" />
+                </div>
+                <div class="stage-panel stage-panel-meter">
+                  <p>CPU</p>
+                  <strong>24%</strong>
+                  <div class="meter meter-green"><span style="width: 24%"></span></div>
+                </div>
+                <div class="stage-panel stage-panel-meter">
+                  <p data-i18n="stageMemory">内存</p>
+                  <strong>11.4 GB</strong>
+                  <div class="meter meter-white"><span style="width: 68%"></span></div>
+                </div>
+                <div class="stage-panel stage-panel-meter">
+                  <p data-i18n="stageNetwork">网络</p>
+                  <strong>↓ 194 MB ↑ 2 GB</strong>
+                  <div class="throughput">
+                    <span></span><span></span><span></span><span></span><span></span><span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="stage-card stage-card-floating">
+              <p data-i18n="stageModulesTitle">面板模块</p>
+              <ul>
+                <li data-i18n="moduleBattery">电池</li>
+                <li data-i18n="moduleNetwork">网络</li>
+                <li data-i18n="moduleSensors">传感器</li>
+                <li data-i18n="moduleAlerts">告警</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="section section-metrics" id="features">
+          <div class="section-heading">
+            <p class="eyebrow" data-i18n="featuresEyebrow">为什么它感觉不一样</p>
+            <h2 data-i18n="featuresTitle">它是为菜单栏设计的，不是把大屏监控缩小后塞进去。</h2>
+          </div>
+
+          <div class="feature-columns">
+            <article>
+              <h3 data-i18n="featureOneTitle">总览优先</h3>
+              <p data-i18n="featureOneBody">弹出面板顶部先显示关键图表。用户不需要展开一堆区域，才能知道这台机器现在是什么状态。</p>
+            </article>
+            <article>
+              <h3 data-i18n="featureTwoTitle">模块按需显示</h3>
+              <p data-i18n="featureTwoBody">面板卡片是可配置的。用户可以只显示自己关心的模块、调整顺序，并决定哪些区域默认展开。</p>
+            </article>
+            <article>
+              <h3 data-i18n="featureThreeTitle">原生采样栈</h3>
+              <p data-i18n="featureThreeBody">CPU、内存、磁盘、网络、电池、告警、Widget 和登录启动都建立在 Swift、SwiftUI 与 AppKit 上，而不是跨端壳。</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section section-preview">
+          <div class="preview-copy">
+            <p class="eyebrow" data-i18n="brandEyebrow">品牌方向</p>
+            <h2 data-i18n="brandTitle">克制的中性色，只保留一个“活着”的信号色。</h2>
+            <p data-i18n="brandBody">
+              这套视觉系统故意不做“监控大屏风格”。logo 和页面都只让一个信号绿承担“实时状态”的含义，其余部分保持安静、技术感和原生工具感。
+            </p>
+          </div>
+          <div class="preview-image">
+            <img src="branding/mac-state-logo-preview.png" alt="mac-state logo on dark and light surfaces" />
+          </div>
+        </section>
+
+        <section class="section section-modules" id="modules">
+          <div class="section-heading">
+            <p class="eyebrow" data-i18n="shipsEyebrow">1.0.0 包含什么</p>
+            <h2 data-i18n="shipsTitle">核心遥测能力已经齐了，同时还保留了收敛界面的空间。</h2>
+          </div>
+
+          <div class="module-strip">
+            <span>CPU</span>
+            <span data-i18n="moduleTagPerCore">每核心 CPU</span>
+            <span data-i18n="moduleTagMemory">内存</span>
+            <span data-i18n="moduleTagDisk">磁盘</span>
+            <span data-i18n="moduleTagNetwork">网络</span>
+            <span data-i18n="moduleTagBattery">电池</span>
+            <span data-i18n="moduleTagSensors">传感器</span>
+            <span data-i18n="moduleTagAlerts">告警</span>
+            <span data-i18n="moduleTagHistory">历史</span>
+            <span data-i18n="moduleTagWidgets">Widget</span>
+            <span data-i18n="moduleTagLaunchAtLogin">登录启动</span>
+            <span data-i18n="moduleTagLanguages">English / 简体中文</span>
+          </div>
+
+          <div class="story-grid">
+            <article class="story-card">
+              <p class="story-index">01</p>
+              <h3 data-i18n="storyOneTitle">只显示真正重要的内容</h3>
+              <p data-i18n="storyOneBody">用户可以隐藏不需要的 dashboard 模块，重新排序保留下来的部分，让弹出面板保持短而清楚。</p>
+            </article>
+            <article class="story-card">
+              <p class="story-index">02</p>
+              <h3 data-i18n="storyTwoTitle">更早发现问题</h3>
+              <p data-i18n="storyTwoBody">本地告警已经覆盖 CPU、内存、电池和磁盘活动，并提供冷却时间和最近告警历史。</p>
+            </article>
+            <article class="story-card">
+              <p class="story-index">03</p>
+              <h3 data-i18n="storyThreeTitle">不止是一个 demo</h3>
+              <p data-i18n="storyThreeBody">实时历史、24 小时聚合、CSV 导出、Widget 快照和正式图标系统，让这个项目开始具备产品感而不是原型感。</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section section-download" id="download">
+          <div class="download-panel">
+            <div>
+              <p class="eyebrow" data-i18n="downloadEyebrow">发布</p>
+              <h2>mac-state 1.0.0</h2>
+              <p data-i18n="downloadBody">支持 macOS 11+，兼容 Intel 与 Apple Silicon。本地打包流程会输出 Release zip 以及对应的 SHA-256 校验值。</p>
+            </div>
+
+            <div class="download-actions">
+              <a class="button button-primary" href="https://github.com/henry-insomniac/mac-state/releases" data-i18n="downloadPrimaryCta">打开 Releases</a>
+              <a class="button button-secondary" href="https://github.com/henry-insomniac/mac-state" data-i18n="downloadSecondaryCta">浏览仓库</a>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

@@ -11,4 +11,4 @@ App/**/build/
 App/**/.DS_Store
 
 Packages/**/.build/
-
+dist/

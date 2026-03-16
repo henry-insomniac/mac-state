@@ -38,6 +38,7 @@
 1. Open `MacState.xcworkspace` in Xcode.
 2. Build the `MacStateApp` target.
 3. Run the app and use the menu bar item to open the dashboard popover.
+4. Open `docs/index.html` through GitHub Pages or any local static server to preview the product site.
 
 ## Current status
 
@@ -65,6 +66,10 @@ This repository currently contains a working MVP foundation:
 ```sh
 xcodebuild -project App/MacStateApp/MacStateApp.xcodeproj -target MacStateApp -configuration Debug build CODE_SIGNING_ALLOWED=NO
 ```
+
+## Packaging
+
+- Run `scripts/package-release.sh 1.0.0` to create a local Release zip and SHA-256 checksum under `dist/`.
 
 ## License
 
