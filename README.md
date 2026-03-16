@@ -69,7 +69,8 @@ xcodebuild -project App/MacStateApp/MacStateApp.xcodeproj -target MacStateApp -c
 
 ## Packaging
 
-- Run `scripts/package-release.sh 1.0.0` to create a local Release zip and SHA-256 checksum under `dist/`.
+- Run `scripts/package-release.sh 1.0.0` to create a local Release zip, an unsigned `.pkg`, and SHA-256 checksums under `dist/`.
+- Without a `Developer ID Application` / `Developer ID Installer` certificate, both outputs remain unsigned for Gatekeeper purposes. The `.pkg` is useful as an installer wrapper, but it does not replace signing and notarization.
 
 ## License
 
