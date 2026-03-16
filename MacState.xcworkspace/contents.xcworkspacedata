@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:App/MacStateApp/MacStateApp.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Packages/MacStateFoundation">
+   </FileRef>
+   <FileRef
+      location = "group:Packages/MacStateMetrics">
+   </FileRef>
+   <FileRef
+      location = "group:Packages/MacStateStorage">
+   </FileRef>
+   <FileRef
+      location = "group:Packages/MacStateUI">
+   </FileRef>
+</Workspace>

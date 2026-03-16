@@ -1,0 +1,62 @@
+# mac-state
+
+`mac-state` is a native macOS menu bar system monitor focused on being lightweight, compact, and pleasant to use.
+
+## Goals
+
+- Native `macOS 11+` app
+- `Universal 2` support for `Intel` and `Apple Silicon`
+- SwiftUI for feature UI with AppKit for macOS shell integration
+- Low-overhead menu bar experience
+- Extensible architecture for metrics, history, alerts, widgets, and sensor helpers
+
+## Repository layout
+
+- [docs](/Users/Zhuanz/work-space/mac-state/docs)
+  Product analysis, technical decisions, and the implementation roadmap.
+- `App/MacStateApp`
+  Native macOS application target and shell code.
+- `Packages/MacStateFoundation`
+  Platform and compatibility primitives.
+- `Packages/MacStateMetrics`
+  Metrics domain models and sampler contracts.
+- `Packages/MacStateStorage`
+  Persistence primitives and settings storage.
+- `Packages/MacStateUI`
+  Reusable SwiftUI components and theme tokens.
+
+## Requirements
+
+- Xcode `26.2` or later
+- Swift `6.2` or later
+- macOS `11.0` SDK deployment target for the app
+
+## Getting started
+
+1. Open `MacState.xcworkspace` in Xcode.
+2. Build the `MacStateApp` target.
+3. Run the app and use the menu bar item to open the dashboard popover.
+
+## Current status
+
+This repository currently contains the initial project bootstrap:
+
+- macOS app shell
+- menu bar controller and popover host
+- settings window
+- local Swift packages with tests
+- project documentation and repository scaffolding
+
+## Testing
+
+- Run `swift test` in each package under `Packages/`
+- Build the app with:
+
+```sh
+xcodebuild -project App/MacStateApp/MacStateApp.xcodeproj -target MacStateApp -configuration Debug build CODE_SIGNING_ALLOWED=NO
+```
+
+## License
+
+No license file has been added yet. Add one before publishing releases or accepting external contributions.
+

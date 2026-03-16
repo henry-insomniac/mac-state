@@ -1,0 +1,79 @@
+import AppKit
+
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    private let container = AppAssembler.makeLiveContainer()
+    private lazy var windowRouter = WindowRouter(appState: container.appState)
+    private lazy var popoverController = PopoverController(
+        appState: container.appState,
+        openSettings: { [weak self] in
+            self?.openSettings(nil)
+        }
+    )
+    private lazy var statusItemController = StatusItemController(
+        appState: container.appState,
+        popoverController: popoverController
+    )
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.setActivationPolicy(.regular)
+        NSApp.mainMenu = makeMainMenu()
+        statusItemController.start()
+    }
+
+    @objc
+    private func openSettings(_ sender: Any?) {
+        NSApp.activate(ignoringOtherApps: true)
+        windowRouter.showSettings()
+    }
+
+    @objc
+    private func quitApplication(_ sender: Any?) {
+        NSApp.terminate(nil)
+    }
+
+    private func makeMainMenu() -> NSMenu {
+        let mainMenu = NSMenu()
+        let applicationMenuItem = NSMenuItem()
+        let applicationMenu = NSMenu()
+
+        applicationMenu.addItem(
+            withTitle: "About mac-state",
+            action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)),
+            keyEquivalent: ""
+        )
+        applicationMenu.addItem(.separator())
+        applicationMenu.addItem(
+            withTitle: "Settings…",
+            action: #selector(openSettings(_:)),
+            keyEquivalent: ","
+        )
+        applicationMenu.addItem(.separator())
+        applicationMenu.addItem(
+            withTitle: "Hide mac-state",
+            action: #selector(NSApplication.hide(_:)),
+            keyEquivalent: "h"
+        )
+        applicationMenu.addItem(
+            withTitle: "Hide Others",
+            action: #selector(NSApplication.hideOtherApplications(_:)),
+            keyEquivalent: "h"
+        ).keyEquivalentModifierMask = [.command, .option]
+        applicationMenu.addItem(
+            withTitle: "Show All",
+            action: #selector(NSApplication.unhideAllApplications(_:)),
+            keyEquivalent: ""
+        )
+        applicationMenu.addItem(.separator())
+        applicationMenu.addItem(
+            withTitle: "Quit mac-state",
+            action: #selector(quitApplication(_:)),
+            keyEquivalent: "q"
+        )
+
+        applicationMenuItem.submenu = applicationMenu
+        mainMenu.addItem(applicationMenuItem)
+
+        return mainMenu
+    }
+}
