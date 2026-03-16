@@ -113,13 +113,13 @@ public enum SensorSource: String, Sendable, Equatable, Codable {
         case (.simplifiedChinese, .smcBridge):
             return "通过 SMC bridge 读取实时硬件传感器数据。"
         case (.simplifiedChinese, .thermalAndBatteryOnlyAppleSilicon):
-            return "当前可读取热状态和电池温度。Apple Silicon 上的 CPU/GPU 温度与风扇仍需更深层的传感器 bridge。"
+            return "已读取热状态和电池温度。CPU/GPU 温度与风扇仍需更深层传感器桥接。"
         case (.simplifiedChinese, .thermalAndBatteryOnlyIntel):
-            return "当前可读取热状态和电池温度，但这台 Intel Mac 上的 SMC 温度或风扇键不可用。"
+            return "已读取热状态和电池温度，但这台 Intel Mac 的 SMC 温度或风扇键不可用。"
         case (.simplifiedChinese, .thermalOnlyAppleSilicon):
-            return "当前只可读取热状态。Apple Silicon 上的 CPU/GPU 温度与风扇仍需更深层的传感器 bridge。"
+            return "仅可读取热状态。CPU/GPU 温度与风扇仍需更深层传感器桥接。"
         case (.simplifiedChinese, .thermalOnlyIntel):
-            return "当前只可读取热状态，这台 Intel Mac 上的 SMC 温度与风扇数据不可用。"
+            return "仅可读取热状态，这台 Intel Mac 的 SMC 温度与风扇数据不可用。"
         case (.english, .collecting):
             return "Collecting sensor telemetry."
         case (.english, .placeholder):

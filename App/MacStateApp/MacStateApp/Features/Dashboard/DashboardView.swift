@@ -1,6 +1,16 @@
 import SwiftUI
 import MacStateUI
 
+enum DashboardLayout {
+    static let popoverWidth: CGFloat = 460
+    static let popoverHeight: CGFloat = 780
+    static let contentPadding: CGFloat = 16
+    static let sectionSpacing: CGFloat = 16
+    static let coreGridSpacing: CGFloat = 12
+    static let coreCardMinimumWidth: CGFloat = 160
+    static let contentWidth: CGFloat = popoverWidth - (contentPadding * 2)
+}
+
 struct DashboardView: View {
     @ObservedObject var appState: AppState
     let refreshMetrics: @MainActor () -> Void
@@ -8,14 +18,15 @@ struct DashboardView: View {
     let openSettings: @MainActor () -> Void
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+        ScrollView(.vertical) {
+            VStack(alignment: .leading, spacing: DashboardLayout.sectionSpacing) {
                 Text(appState.text(.appTitle))
                     .font(.title2)
                     .bold()
 
                 Text(appState.text(.liveMacOSSystemMonitor))
                     .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 MetricCard(appState.text(.cpu)) {
                     Text(appState.cpuUsageText)
@@ -24,34 +35,38 @@ struct DashboardView: View {
 
                     Text("\(appState.text(.architecturePrefix)): \(appState.platformArchitectureText)")
                         .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 MetricCard(appState.text(.cpuCores)) {
                     Text(appState.cpuCoreCountText)
                         .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     TrendStrip(values: appState.cpuCoreTrendValues, tint: .orange)
 
                     LazyVGrid(
                         columns: [
-                            GridItem(.flexible()),
-                            GridItem(.flexible()),
-                            GridItem(.flexible()),
-                            GridItem(.flexible()),
+                            GridItem(
+                                .adaptive(minimum: DashboardLayout.coreCardMinimumWidth),
+                                alignment: .top
+                            ),
                         ],
                         alignment: .leading,
-                        spacing: 8
+                        spacing: DashboardLayout.coreGridSpacing
                     ) {
                         ForEach(appState.cpuCores) { core in
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("\(appState.text(.cpu)) \(core.index + 1)")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
+                                    .lineLimit(1)
 
                                 Text(appState.cpuCoreUsageText(for: core))
                                     .bold()
 
                                 ProgressView(value: core.usage)
+                                    .frame(maxWidth: .infinity)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
@@ -65,6 +80,7 @@ struct DashboardView: View {
 
                     Text(appState.memoryFootprintText)
                         .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 MetricCard(appState.text(.disk)) {
@@ -74,9 +90,11 @@ struct DashboardView: View {
 
                     Text(appState.diskFootprintText)
                         .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Text(appState.diskActivityText)
                         .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 MetricCard(appState.text(.battery)) {
@@ -86,6 +104,7 @@ struct DashboardView: View {
 
                     Text(appState.batteryDetailText)
                         .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 MetricCard(appState.text(.sensors)) {
@@ -95,6 +114,7 @@ struct DashboardView: View {
 
                     Text(appState.thermalConditionDetailText)
                         .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Text(appState.sensorSourceText)
                         .foregroundColor(.secondary)
@@ -137,6 +157,7 @@ struct DashboardView: View {
 
                     Text(appState.fanStatusText)
                         .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     if appState.sensors.fans.isEmpty == false {
                         VStack(alignment: .leading, spacing: 8) {
@@ -170,19 +191,28 @@ struct DashboardView: View {
                         .font(.title2)
                         .bold()
 
-                    Text("\(appState.text(.upload)) \(appState.uploadRateText) • \(appState.networkStatusText)")
-                        .foregroundColor(.secondary)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(appState.text(.upload)) \(appState.uploadRateText)")
+                            .foregroundColor(.secondary)
+
+                        Text(appState.networkStatusText)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
 
                 MetricCard(appState.text(.alerts)) {
                     Text(appState.alertsStatusText)
                         .font(.headline)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Text(appState.alertsSummaryText)
                         .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Text(appState.recentAlertsText)
                         .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     if appState.recentAlerts.isEmpty == false {
                         VStack(alignment: .leading, spacing: 10) {
@@ -191,7 +221,7 @@ struct DashboardView: View {
                                     HStack(alignment: .firstTextBaseline) {
                                         Text(alert.title)
                                             .bold()
-                                            .lineLimit(1)
+                                            .lineLimit(2)
 
                                         Spacer()
 
@@ -211,6 +241,7 @@ struct DashboardView: View {
                 MetricCard(appState.text(.trends)) {
                     Text(appState.historySummaryText)
                         .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     VStack(alignment: .leading, spacing: 12) {
                         Text(appState.text(.cpu))
@@ -244,10 +275,12 @@ struct DashboardView: View {
                     Text(appState.runningAppsText)
                         .font(.title3)
                         .bold()
+                        .fixedSize(horizontal: false, vertical: true)
 
                     if appState.processes.isEmpty {
                         Text(appState.text(.visibleAppsAfterScan))
                             .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     } else {
                         VStack(alignment: .leading, spacing: 8) {
                             ForEach(appState.processes) { process in
@@ -273,10 +306,12 @@ struct DashboardView: View {
                 Text("\(appState.text(.lastUpdated)) \(appState.lastUpdatedText)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 if let errorMessage = appState.errorMessage {
                     Text(errorMessage)
                         .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 Button {
@@ -297,9 +332,9 @@ struct DashboardView: View {
                     Label(appState.text(.openSettings), systemImage: "gearshape")
                 }
             }
-            .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(DashboardLayout.contentPadding)
+            .frame(width: DashboardLayout.contentWidth, alignment: .leading)
         }
-        .frame(width: 420, height: 780)
+        .frame(width: DashboardLayout.popoverWidth, height: DashboardLayout.popoverHeight)
     }
 }

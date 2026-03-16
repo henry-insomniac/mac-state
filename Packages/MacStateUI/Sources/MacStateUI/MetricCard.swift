@@ -13,10 +13,11 @@ public struct MetricCard<Content: View>: View {
     }
 
     public var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(.headline)
                 .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
 
             content
         }
@@ -25,6 +26,9 @@ public struct MetricCard<Content: View>: View {
         .background(
             RoundedRectangle(cornerRadius: MetricCardStyle.cornerRadius, style: .continuous)
                 .fill(Color.secondary.opacity(0.12))
+        )
+        .clipShape(
+            RoundedRectangle(cornerRadius: MetricCardStyle.cornerRadius, style: .continuous)
         )
     }
 }
