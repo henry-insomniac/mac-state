@@ -144,7 +144,8 @@ import MacStateMetrics
         textMode: .selectedMetrics,
         primaryMetric: .networkDownload,
         secondaryMetric: .memoryUsage,
-        tertiaryMetric: .diskActivity
+        tertiaryMetric: .diskActivity,
+        selectedMetrics: [.networkDownload, .memoryUsage, .diskActivity, .batteryLevel]
     )
 
     await store.set(presentation, for: .menuBarPresentation)

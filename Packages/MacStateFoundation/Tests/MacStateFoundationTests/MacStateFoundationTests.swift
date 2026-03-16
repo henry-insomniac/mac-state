@@ -45,6 +45,7 @@ import Foundation
     #expect(presentation.primaryMetric == .cpuUsage)
     #expect(presentation.secondaryMetric == .memoryUsage)
     #expect(presentation.tertiaryMetric == .networkDownload)
+    #expect(presentation.selectedMetrics == [.cpuUsage, .memoryUsage, .networkDownload])
 }
 
 @Test func sharedWidgetSnapshotStoreRoundTripsSnapshot() {
@@ -61,8 +62,8 @@ import Foundation
 
 @Test func menuBarPresentationTitlesCanBeLocalized() {
     #expect(MenuBarTextMode.iconOnly.localizedTitle(language: .simplifiedChinese) == "仅图标")
-    #expect(MenuBarTextMode.selectedMetrics.localizedTitle(language: .english) == "Up to 3 Metrics")
-    #expect(MenuBarTextMode.twoMetrics.localizedTitle(language: .english) == "Up to 3 Metrics")
+    #expect(MenuBarTextMode.selectedMetrics.localizedTitle(language: .english) == "Multiple Metrics")
+    #expect(MenuBarTextMode.twoMetrics.localizedTitle(language: .english) == "Multiple Metrics")
     #expect(MenuBarPrimaryMetric.diskActivity.localizedTitle(language: .simplifiedChinese) == "磁盘活动")
     #expect(MenuBarPrimaryMetric.memoryUsage.localizedCompactTitle(language: .english) == "MEM")
 }

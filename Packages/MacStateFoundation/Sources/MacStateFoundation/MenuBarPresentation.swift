@@ -30,7 +30,7 @@ public enum MenuBarTextMode: String, Codable, Sendable, Equatable {
         case (.system, .selectedMetric):
             return "Selected Metric"
         case (.system, .twoMetrics), (.system, .selectedMetrics):
-            return "Up to 3 Metrics"
+            return "Multiple Metrics"
         case (.system, .appName):
             return "App Name"
         case (.system, .iconOnly):
@@ -38,7 +38,7 @@ public enum MenuBarTextMode: String, Codable, Sendable, Equatable {
         case (.simplifiedChinese, .selectedMetric):
             return "所选指标"
         case (.simplifiedChinese, .twoMetrics), (.simplifiedChinese, .selectedMetrics):
-            return "多指标（最多 3 项）"
+            return "多指标"
         case (.simplifiedChinese, .appName):
             return "应用名称"
         case (.simplifiedChinese, .iconOnly):
@@ -46,7 +46,7 @@ public enum MenuBarTextMode: String, Codable, Sendable, Equatable {
         case (.english, .selectedMetric):
             return "Selected Metric"
         case (.english, .twoMetrics), (.english, .selectedMetrics):
-            return "Up to 3 Metrics"
+            return "Multiple Metrics"
         case (.english, .appName):
             return "App Name"
         case (.english, .iconOnly):
@@ -156,23 +156,27 @@ public struct MenuBarPresentation: Codable, Sendable, Equatable {
     public var primaryMetric: MenuBarPrimaryMetric
     public var secondaryMetric: MenuBarPrimaryMetric?
     public var tertiaryMetric: MenuBarPrimaryMetric?
+    public var selectedMetrics: [MenuBarPrimaryMetric]?
 
     public init(
         textMode: MenuBarTextMode,
         primaryMetric: MenuBarPrimaryMetric,
         secondaryMetric: MenuBarPrimaryMetric? = nil,
-        tertiaryMetric: MenuBarPrimaryMetric? = nil
+        tertiaryMetric: MenuBarPrimaryMetric? = nil,
+        selectedMetrics: [MenuBarPrimaryMetric]? = nil
     ) {
         self.textMode = textMode.normalized
         self.primaryMetric = primaryMetric
         self.secondaryMetric = secondaryMetric
         self.tertiaryMetric = tertiaryMetric
+        self.selectedMetrics = selectedMetrics
     }
 
     public static let `default` = MenuBarPresentation(
         textMode: .selectedMetrics,
         primaryMetric: .cpuUsage,
         secondaryMetric: .memoryUsage,
-        tertiaryMetric: .networkDownload
+        tertiaryMetric: .networkDownload,
+        selectedMetrics: [.cpuUsage, .memoryUsage, .networkDownload]
     )
 }

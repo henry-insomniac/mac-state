@@ -4,10 +4,6 @@ import MacStateFoundation
 import MacStateMetrics
 import MacStateStorage
 
-private enum MenuBarSelectionPolicy {
-    static let maximumMetricCount = 3
-}
-
 @MainActor
 final class AppState: ObservableObject {
     struct RecentAlert: Identifiable, Equatable {
@@ -107,9 +103,9 @@ final class AppState: ObservableObject {
 
         switch resolvedLanguage {
         case .simplifiedChinese:
-            return "已选 \(selectionCount)/\(MenuBarSelectionPolicy.maximumMetricCount) 项。排在最前的指标会决定菜单栏图标。"
+            return "已选 \(selectionCount) 项。排在最前的指标会决定菜单栏图标。"
         case .english, .system:
-            return "\(selectionCount) of \(MenuBarSelectionPolicy.maximumMetricCount) selected. The first metric controls the menu bar icon."
+            return "\(selectionCount) selected. The first metric controls the menu bar icon."
         }
     }
 
@@ -118,7 +114,8 @@ final class AppState: ObservableObject {
     }
 
     func canSelectMenuBarMetric(_ value: MenuBarPrimaryMetric) -> Bool {
-        isMenuBarMetricSelected(value) || menuBarSelectedMetrics.count < MenuBarSelectionPolicy.maximumMetricCount
+        _ = value
+        return true
     }
 
     func menuBarMetricSelectionOrderText(for value: MenuBarPrimaryMetric) -> String? {
@@ -185,9 +182,9 @@ final class AppState: ObservableObject {
             let selectedMetrics = localizedMenuBarMetricList(from: menuBarSelectedMetrics)
             switch resolvedLanguage {
             case .simplifiedChinese:
-                return "菜单栏会同时显示\(selectedMetrics)，最多 \(MenuBarSelectionPolicy.maximumMetricCount) 项。"
+                return "菜单栏会同时显示\(selectedMetrics)。"
             case .english, .system:
-                return "The menu bar can show up to \(MenuBarSelectionPolicy.maximumMetricCount) live metrics together. Current selection: \(selectedMetrics)."
+                return "The menu bar can show multiple live metrics together. Current selection: \(selectedMetrics)."
             }
         case .appName:
             switch resolvedLanguage {
@@ -716,8 +713,7 @@ final class AppState: ObservableObject {
             var metrics = resolvedMenuBarMetrics(for: presentation)
 
             if isSelected {
-                guard metrics.contains(value) == false,
-                      metrics.count < MenuBarSelectionPolicy.maximumMetricCount else {
+                guard metrics.contains(value) == false else {
                     return
                 }
 
@@ -889,11 +885,12 @@ final class AppState: ObservableObject {
     private func resolvedMenuBarMetrics(
         for presentation: MenuBarPresentation
     ) -> [MenuBarPrimaryMetric] {
-        let metrics = [
+        let legacyMetrics = [
             presentation.primaryMetric,
             presentation.secondaryMetric,
             presentation.tertiaryMetric,
         ].compactMap { $0 }
+        let metrics = (presentation.selectedMetrics?.isEmpty == false ? presentation.selectedMetrics : legacyMetrics) ?? legacyMetrics
 
         let uniqueMetrics = metrics.reduce(into: [MenuBarPrimaryMetric]()) { partialResult, metric in
             if partialResult.contains(metric) == false {
@@ -905,21 +902,19 @@ final class AppState: ObservableObject {
             ? [presentation.primaryMetric]
             : uniqueMetrics
 
-        return Array(normalizedMetrics.prefix(MenuBarSelectionPolicy.maximumMetricCount))
+        return normalizedMetrics
     }
 
     private func assignMenuBarMetrics(
         _ metrics: [MenuBarPrimaryMetric],
         to presentation: inout MenuBarPresentation
     ) {
-        let normalizedMetrics = Array(
-            (metrics.isEmpty ? [presentation.primaryMetric] : metrics)
-                .prefix(MenuBarSelectionPolicy.maximumMetricCount)
-        )
+        let normalizedMetrics = metrics.isEmpty ? [presentation.primaryMetric] : metrics
 
         presentation.primaryMetric = normalizedMetrics.first ?? .cpuUsage
         presentation.secondaryMetric = normalizedMetrics.count > 1 ? normalizedMetrics[1] : nil
         presentation.tertiaryMetric = normalizedMetrics.count > 2 ? normalizedMetrics[2] : nil
+        presentation.selectedMetrics = normalizedMetrics
     }
 
     private func localizedMenuBarMetricList(from metrics: [MenuBarPrimaryMetric]) -> String {
