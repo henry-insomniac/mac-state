@@ -8,6 +8,34 @@ struct SettingsView: View {
         Form {
             Section {
                 Toggle(
+                    "Launch mac-state at login",
+                    isOn: Binding(
+                        get: { appState.launchAtLoginStatus.isEnabled },
+                        set: { appState.setLaunchAtLoginEnabled($0) }
+                    )
+                )
+                .disabled(appState.launchAtLoginStatus.canToggle == false)
+
+                Text(appState.launchAtLoginSummaryText)
+                    .foregroundColor(.secondary)
+
+                Text(appState.launchAtLoginDetailText)
+                    .foregroundColor(.secondary)
+
+                if let launchAtLoginErrorMessage = appState.launchAtLoginErrorMessage {
+                    Text(launchAtLoginErrorMessage)
+                        .foregroundColor(.secondary)
+                }
+
+                Button {
+                    appState.refreshLaunchAtLoginStatus()
+                } label: {
+                    Label("Refresh Launch at Login Status", systemImage: "arrow.clockwise")
+                }
+            }
+
+            Section {
+                Toggle(
                     "Show compact menu bar text",
                     isOn: Binding(
                         get: { appState.compactMenuBarText },

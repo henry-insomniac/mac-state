@@ -16,7 +16,10 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "MacStateFoundation"
+            name: "MacStateFoundation",
+            linkerSettings: [
+                .linkedFramework("ServiceManagement"),
+            ]
         ),
         .testTarget(
             name: "MacStateFoundationTests",

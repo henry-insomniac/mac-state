@@ -45,6 +45,7 @@ This repository currently contains a working MVP foundation:
 - live CPU, per-core CPU, memory, disk, network, battery, and running app metrics
 - short-term metric history with lightweight persistence
 - configurable local alerts for CPU, memory, battery, and disk activity
+- launch-at-login control on macOS 13+, with legacy helper still pending for macOS 11-12
 - settings window for compact mode and alert thresholds
 - local Swift packages with tests
 - project documentation and repository scaffolding

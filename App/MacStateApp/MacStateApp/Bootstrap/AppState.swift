@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import MacStateFoundation
 import MacStateMetrics
 import MacStateStorage
 
@@ -18,6 +19,10 @@ final class AppState: ObservableObject {
 
     @Published var compactMenuBarText = true
     @Published private(set) var alertConfiguration = MetricAlertConfiguration()
+    @Published private(set) var launchAtLoginStatus = LaunchAtLoginStatus(
+        availability: PlatformCapabilities.current.supportsModernLoginItems ? .supported : .requiresLegacyHelper,
+        registrationState: .disabled
+    )
     @Published private(set) var cpuUsage = 0.0
     @Published private(set) var cpuCores: [CPUCoreSnapshot] = []
     @Published private(set) var memoryUsage = 0.0
@@ -37,16 +42,20 @@ final class AppState: ObservableObject {
     @Published private(set) var recentAlerts: [RecentAlert] = []
     @Published private(set) var platformSummary = "Detecting..."
     @Published private(set) var lastUpdatedAt = Date()
+    @Published private(set) var launchAtLoginErrorMessage: String?
     @Published private(set) var errorMessage: String?
 
+    private let launchAtLoginService: any LaunchAtLoginService
     private let settingsStore: SettingsStore
     private let historyStore: MetricHistoryStore
     private var activeAlertTypes: Set<MetricAlertType> = []
 
     init(
+        launchAtLoginService: any LaunchAtLoginService,
         settingsStore: SettingsStore = SettingsStore(),
         historyStore: MetricHistoryStore = MetricHistoryStore()
     ) {
+        self.launchAtLoginService = launchAtLoginService
         self.settingsStore = settingsStore
         self.historyStore = historyStore
     }
@@ -69,6 +78,35 @@ final class AppState: ObservableObject {
         }
 
         return "Cooldown \(alertConfiguration.clampedCooldownMinutes)m"
+    }
+
+    var launchAtLoginSummaryText: String {
+        switch launchAtLoginStatus.availability {
+        case .requiresLegacyHelper:
+            return "Launch at login needs the legacy helper path on macOS 11 and 12"
+        case .supported:
+            switch launchAtLoginStatus.registrationState {
+            case .disabled:
+                return "mac-state will stay manual until you enable launch at login"
+            case .enabled:
+                return "mac-state will launch automatically after you sign in"
+            case .requiresApproval:
+                return "Launch at login is waiting for approval in System Settings"
+            }
+        }
+    }
+
+    var launchAtLoginDetailText: String {
+        switch launchAtLoginStatus.availability {
+        case .requiresLegacyHelper:
+            return "The main app already runs on macOS 11+, but the bundled login helper target still needs to be wired in for older systems."
+        case .supported:
+            if launchAtLoginStatus.requiresApproval {
+                return "Approve mac-state in System Settings > General > Login Items, then refresh the status here."
+            }
+
+            return "macOS 13+ uses ServiceManagement to register the main app without a separate login helper."
+        }
     }
 
     var alertsStatusText: String {
@@ -280,6 +318,7 @@ final class AppState: ObservableObject {
             alertConfiguration = restoredAlertConfiguration
         }
         historySamples = await historyStore.samples()
+        refreshLaunchAtLoginStatus()
     }
 
     func setCompactMenuBarText(_ value: Bool) {
@@ -341,6 +380,24 @@ final class AppState: ObservableObject {
     func setAlertCooldownMinutes(_ value: Int) {
         updateAlertConfiguration { configuration in
             configuration.cooldownMinutes = value
+        }
+    }
+
+    func refreshLaunchAtLoginStatus() {
+        launchAtLoginStatus = launchAtLoginService.status()
+
+        if launchAtLoginStatus.requiresApproval == false {
+            launchAtLoginErrorMessage = nil
+        }
+    }
+
+    func setLaunchAtLoginEnabled(_ value: Bool) {
+        do {
+            launchAtLoginStatus = try launchAtLoginService.setEnabled(value)
+            launchAtLoginErrorMessage = nil
+        } catch {
+            launchAtLoginStatus = launchAtLoginService.status()
+            launchAtLoginErrorMessage = error.localizedDescription
         }
     }
 
