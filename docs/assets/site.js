@@ -12,6 +12,8 @@ const pageTranslations = {
       "mac-state 把实时系统指标放回菜单栏该有的位置。先看最关键的信息，再按需打开细节，不把桌面变成一个喧闹的大屏监控台。",
     heroPrimaryCta: "查看源码",
     heroSecondaryCta: "发布构建",
+    heroStarLead: "如果你喜欢这个项目，",
+    heroStarLink: "欢迎给它一个 Star。",
     highlightOne: "macOS 11+",
     highlightTwo: "Intel + Apple Silicon",
     highlightThree: "菜单栏优先",
@@ -65,6 +67,8 @@ const pageTranslations = {
       "支持 macOS 11+，兼容 Intel 与 Apple Silicon。本地打包流程会输出 Release zip 以及对应的 SHA-256 校验值。",
     downloadPrimaryCta: "打开 Releases",
     downloadSecondaryCta: "浏览仓库",
+    downloadStarLead: "如果这个项目对你有帮助，",
+    downloadStarLink: "欢迎在 GitHub 上点亮 Star。",
   },
   en: {
     pageTitle: "mac-state 1.0.0",
@@ -79,6 +83,8 @@ const pageTranslations = {
       "mac-state puts live system telemetry back where it belongs. See the essentials first, expand details only when you need them, and avoid turning the desktop into a noisy wall of monitoring panels.",
     heroPrimaryCta: "View Source",
     heroSecondaryCta: "Release Builds",
+    heroStarLead: "If you like this project,",
+    heroStarLink: "please give it a star on GitHub.",
     highlightOne: "macOS 11+",
     highlightTwo: "Intel + Apple Silicon",
     highlightThree: "Menu bar first",
@@ -132,6 +138,8 @@ const pageTranslations = {
       "Built for macOS 11 and later, with support for both Intel and Apple Silicon. The local packaging flow outputs a Release zip and a matching SHA-256 checksum.",
     downloadPrimaryCta: "Open Releases",
     downloadSecondaryCta: "Browse Repository",
+    downloadStarLead: "If this project helps you,",
+    downloadStarLink: "please star it on GitHub.",
   },
 };
 

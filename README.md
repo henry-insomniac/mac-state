@@ -2,6 +2,8 @@
 
 `mac-state` is a native macOS menu bar system monitor focused on being lightweight, compact, and pleasant to use.
 
+If you like `mac-state`, please [star the project on GitHub](https://github.com/henry-insomniac/mac-state).
+
 ## Goals
 
 - Native `macOS 11+` app
@@ -74,4 +76,4 @@ xcodebuild -project App/MacStateApp/MacStateApp.xcodeproj -target MacStateApp -c
 
 ## License
 
-No license file has been added yet. Add one before publishing releases or accepting external contributions.
+MIT. See [LICENSE](/Users/Zhuanz/work-space/mac-state/LICENSE).

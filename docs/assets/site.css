@@ -176,6 +176,22 @@ a {
   margin-top: 2rem;
 }
 
+.support-note {
+  margin: 1rem 0 0;
+  color: var(--muted);
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+
+.support-note a {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.support-note-download {
+  margin-top: 1.25rem;
+}
+
 .button {
   display: inline-flex;
   align-items: center;
