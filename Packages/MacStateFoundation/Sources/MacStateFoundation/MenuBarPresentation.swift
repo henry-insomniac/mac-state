@@ -58,6 +58,7 @@ public enum MenuBarTextMode: String, Codable, Sendable, Equatable {
 public enum MenuBarPrimaryMetric: String, CaseIterable, Codable, Sendable, Equatable {
     case cpuUsage
     case memoryUsage
+    case networkThroughput
     case networkDownload
     case networkUpload
     case diskActivity
@@ -69,6 +70,8 @@ public enum MenuBarPrimaryMetric: String, CaseIterable, Codable, Sendable, Equat
             return "CPU Usage"
         case (.system, .memoryUsage):
             return "Memory Usage"
+        case (.system, .networkThroughput):
+            return "Network Throughput"
         case (.system, .networkDownload):
             return "Network Download"
         case (.system, .networkUpload):
@@ -81,6 +84,8 @@ public enum MenuBarPrimaryMetric: String, CaseIterable, Codable, Sendable, Equat
             return "CPU 使用率"
         case (.simplifiedChinese, .memoryUsage):
             return "内存使用率"
+        case (.simplifiedChinese, .networkThroughput):
+            return "网络双向速率"
         case (.simplifiedChinese, .networkDownload):
             return "网络下载"
         case (.simplifiedChinese, .networkUpload):
@@ -93,6 +98,8 @@ public enum MenuBarPrimaryMetric: String, CaseIterable, Codable, Sendable, Equat
             return "CPU Usage"
         case (.english, .memoryUsage):
             return "Memory Usage"
+        case (.english, .networkThroughput):
+            return "Network Throughput"
         case (.english, .networkDownload):
             return "Network Download"
         case (.english, .networkUpload):
@@ -110,6 +117,8 @@ public enum MenuBarPrimaryMetric: String, CaseIterable, Codable, Sendable, Equat
             return "CPU"
         case (.system, .memoryUsage), (.english, .memoryUsage):
             return "MEM"
+        case (.system, .networkThroughput), (.english, .networkThroughput):
+            return "NET"
         case (.system, .networkDownload), (.english, .networkDownload):
             return "DOWN"
         case (.system, .networkUpload), (.english, .networkUpload):
@@ -122,6 +131,8 @@ public enum MenuBarPrimaryMetric: String, CaseIterable, Codable, Sendable, Equat
             return "CPU"
         case (.simplifiedChinese, .memoryUsage):
             return "内存"
+        case (.simplifiedChinese, .networkThroughput):
+            return "网络"
         case (.simplifiedChinese, .networkDownload):
             return "下载"
         case (.simplifiedChinese, .networkUpload):
@@ -139,6 +150,8 @@ public enum MenuBarPrimaryMetric: String, CaseIterable, Codable, Sendable, Equat
             "speedometer"
         case .memoryUsage:
             "square.stack.3d.up"
+        case .networkThroughput:
+            "arrow.up.arrow.down.circle"
         case .networkDownload:
             "arrow.down.circle"
         case .networkUpload:

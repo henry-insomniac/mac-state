@@ -124,6 +124,8 @@ final class StatusItemController: NSObject {
         switch metric {
         case .cpuUsage, .memoryUsage, .batteryLevel:
             return "100%"
+        case .networkThroughput:
+            return "↓ 999.9 MB/s ↑ 999.9 MB/s"
         case .networkDownload, .networkUpload, .diskActivity:
             return "999.9 MB/s"
         }

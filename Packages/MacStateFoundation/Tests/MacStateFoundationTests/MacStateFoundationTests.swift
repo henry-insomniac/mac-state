@@ -66,6 +66,7 @@ import Foundation
     #expect(MenuBarTextMode.twoMetrics.localizedTitle(language: .english) == "Multiple Metrics")
     #expect(MenuBarPrimaryMetric.diskActivity.localizedTitle(language: .simplifiedChinese) == "磁盘活动")
     #expect(MenuBarPrimaryMetric.memoryUsage.localizedCompactTitle(language: .english) == "MEM")
+    #expect(MenuBarPrimaryMetric.networkThroughput.localizedCompactTitle(language: .english) == "NET")
 }
 
 @Test func appLanguageDisplayNameRespectsPresentationLanguage() {

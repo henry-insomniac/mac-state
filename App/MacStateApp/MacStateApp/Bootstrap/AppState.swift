@@ -410,6 +410,10 @@ final class AppState: ObservableObject {
         rateString(from: networkUploadBytesPerSecond)
     }
 
+    var combinedNetworkRateText: String {
+        "↓ \(downloadRateText) ↑ \(uploadRateText)"
+    }
+
     var networkStatusText: String {
         if activeNetworkInterfaces == 0 {
             return resolvedLanguage == .simplifiedChinese ? "没有活动网络接口" : "No active interfaces"
@@ -871,6 +875,8 @@ final class AppState: ObservableObject {
             cpuUsageText
         case .memoryUsage:
             memoryUsageText
+        case .networkThroughput:
+            combinedNetworkRateText
         case .networkDownload:
             downloadRateText
         case .networkUpload:
