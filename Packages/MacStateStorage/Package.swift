@@ -16,17 +16,22 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../MacStateFoundation"),
+        .package(path: "../MacStateMetrics"),
     ],
     targets: [
         .target(
             name: "MacStateStorage",
             dependencies: [
                 .product(name: "MacStateFoundation", package: "MacStateFoundation"),
+                .product(name: "MacStateMetrics", package: "MacStateMetrics"),
             ]
         ),
         .testTarget(
             name: "MacStateStorageTests",
-            dependencies: ["MacStateStorage"]
+            dependencies: [
+                "MacStateStorage",
+                .product(name: "MacStateMetrics", package: "MacStateMetrics"),
+            ]
         ),
     ]
 )

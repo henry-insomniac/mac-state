@@ -4,8 +4,15 @@ import MacStateStorage
 enum AppAssembler {
     static func makeLiveContainer() -> DependencyContainer {
         let settingsStore = SettingsStore()
-        let appState = AppState(settingsStore: settingsStore)
-        let metricsMonitor = AppMetricsMonitor(appState: appState)
+        let historyStore = MetricHistoryStore()
+        let appState = AppState(
+            settingsStore: settingsStore,
+            historyStore: historyStore
+        )
+        let metricsMonitor = AppMetricsMonitor(
+            appState: appState,
+            historyStore: historyStore
+        )
 
         return DependencyContainer(
             appState: appState,

@@ -23,9 +23,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.mainMenu = makeMainMenu()
         statusItemController.start()
         Task {
-            await container.appState.loadPersistedSettings()
+            await container.appState.loadPersistedState()
+            container.metricsMonitor.start()
         }
-        container.metricsMonitor.start()
     }
 
     func applicationWillTerminate(_ notification: Notification) {

@@ -61,6 +61,33 @@ struct DashboardView: View {
                         .foregroundColor(.secondary)
                 }
 
+                MetricCard("Trends") {
+                    Text(appState.historySummaryText)
+                        .foregroundColor(.secondary)
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("CPU")
+                            .font(.subheadline)
+                            .bold()
+                        TrendStrip(values: appState.cpuTrendValues, tint: .red)
+
+                        Text("Memory")
+                            .font(.subheadline)
+                            .bold()
+                        TrendStrip(values: appState.memoryTrendValues, tint: .blue)
+
+                        Text("Network")
+                            .font(.subheadline)
+                            .bold()
+                        TrendStrip(values: appState.networkTrendValues, tint: .green)
+
+                        Text("Battery")
+                            .font(.subheadline)
+                            .bold()
+                        TrendStrip(values: appState.batteryTrendValues, tint: .orange)
+                    }
+                }
+
                 MetricCard("Running Apps") {
                     Text(appState.runningAppsText)
                         .font(.title3)
@@ -115,6 +142,6 @@ struct DashboardView: View {
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(width: 380, height: 560)
+        .frame(width: 400, height: 680)
     }
 }

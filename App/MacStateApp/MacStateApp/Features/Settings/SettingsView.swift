@@ -35,6 +35,9 @@ struct SettingsView: View {
             Text("Dashboard app list: \(appState.runningAppsText)")
                 .foregroundColor(.secondary)
 
+            Text("Trend cache: \(appState.historySummaryText)")
+                .foregroundColor(.secondary)
+
             Text("Last updated \(appState.lastUpdatedText)")
                 .foregroundColor(.secondary)
         }

@@ -1,18 +1,22 @@
 import Foundation
 import MacStateMetrics
+import MacStateStorage
 
 @MainActor
 final class AppMetricsMonitor {
     private let appState: AppState
     private let metricsProvider: any MetricsSnapshotProviding
+    private let historyStore: MetricHistoryStore
     private var refreshTask: Task<Void, Never>?
 
     init(
         appState: AppState,
-        metricsProvider: any MetricsSnapshotProviding = LiveMetricsProvider()
+        metricsProvider: any MetricsSnapshotProviding = LiveMetricsProvider(),
+        historyStore: MetricHistoryStore = MetricHistoryStore()
     ) {
         self.appState = appState
         self.metricsProvider = metricsProvider
+        self.historyStore = historyStore
     }
 
     func start() {
@@ -61,7 +65,9 @@ final class AppMetricsMonitor {
     private func refreshMetrics() async {
         do {
             let snapshot = try await metricsProvider.snapshot()
+            let historySamples = await historyStore.append(snapshot: snapshot)
             appState.apply(snapshot)
+            appState.applyHistory(historySamples)
             appState.setErrorMessage(nil)
         } catch {
             appState.setErrorMessage("Unable to read system metrics")

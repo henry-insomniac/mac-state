@@ -18,14 +18,20 @@ final class AppState: ObservableObject {
     @Published private(set) var activeNetworkInterfaces = 0
     @Published private(set) var batterySnapshot: BatterySnapshot?
     @Published private(set) var processes: [ProcessSnapshot] = []
+    @Published private(set) var historySamples: [MetricHistorySample] = []
     @Published private(set) var platformSummary = "Detecting..."
     @Published private(set) var lastUpdatedAt = Date()
     @Published private(set) var errorMessage: String?
 
     private let settingsStore: SettingsStore
+    private let historyStore: MetricHistoryStore
 
-    init(settingsStore: SettingsStore = SettingsStore()) {
+    init(
+        settingsStore: SettingsStore = SettingsStore(),
+        historyStore: MetricHistoryStore = MetricHistoryStore()
+    ) {
         self.settingsStore = settingsStore
+        self.historyStore = historyStore
     }
 
     var menuBarTitle: String {
@@ -137,6 +143,37 @@ final class AppState: ObservableObject {
         return "\(processes.count) visible apps"
     }
 
+    var historySummaryText: String {
+        guard let firstSample = historySamples.first,
+              let lastSample = historySamples.last else {
+            return "History populates after the first successful samples"
+        }
+
+        let interval = max(lastSample.timestamp.timeIntervalSince(firstSample.timestamp), 0)
+
+        if interval < 60 {
+            return "\(historySamples.count) samples across \(Int(interval.rounded()))s"
+        }
+
+        return "\(historySamples.count) samples across \(durationString(fromMinutes: Int((interval / 60).rounded())))"
+    }
+
+    var cpuTrendValues: [Double] {
+        historySamples.map(\.cpuUsage)
+    }
+
+    var memoryTrendValues: [Double] {
+        historySamples.map(\.memoryUsage)
+    }
+
+    var networkTrendValues: [Double] {
+        historySamples.map { Double($0.networkThroughputBytesPerSecond) }
+    }
+
+    var batteryTrendValues: [Double] {
+        historySamples.compactMap(\.batteryLevel)
+    }
+
     var lastUpdatedText: String {
         let components = Calendar.current.dateComponents([.hour, .minute], from: lastUpdatedAt)
         let hour = components.hour ?? 0
@@ -145,8 +182,9 @@ final class AppState: ObservableObject {
         return "\(twoDigitString(hour)):\(twoDigitString(minute))"
     }
 
-    func loadPersistedSettings() async {
+    func loadPersistedState() async {
         compactMenuBarText = await settingsStore.bool(for: .compactMenuBarText)
+        historySamples = await historyStore.samples()
     }
 
     func setCompactMenuBarText(_ value: Bool) {
@@ -172,6 +210,10 @@ final class AppState: ObservableObject {
         processes = snapshot.processes
         platformSummary = snapshot.platform.architecture.rawValue
         lastUpdatedAt = snapshot.timestamp
+    }
+
+    func applyHistory(_ samples: [MetricHistorySample]) {
+        historySamples = samples
     }
 
     func setErrorMessage(_ message: String?) {

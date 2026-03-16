@@ -46,3 +46,19 @@ import Foundation
     #expect(rates.download == 2_000)
     #expect(rates.upload == 500)
 }
+
+@Test func metricHistorySampleCapturesSnapshotFields() {
+    let snapshot = MetricSnapshot.placeholder(
+        now: Date(timeIntervalSince1970: 200)
+    )
+
+    let sample = MetricHistorySample(snapshot: snapshot)
+
+    #expect(sample.timestamp == snapshot.timestamp)
+    #expect(sample.cpuUsage == snapshot.cpuUsage)
+    #expect(sample.memoryUsage == snapshot.memoryUsage)
+    #expect(sample.downloadBytesPerSecond == snapshot.networkDownloadBytesPerSecond)
+    #expect(sample.uploadBytesPerSecond == snapshot.networkUploadBytesPerSecond)
+    #expect(sample.batteryLevel == snapshot.battery?.level)
+    #expect(sample.networkThroughputBytesPerSecond == 13_107_200)
+}
