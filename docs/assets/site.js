@@ -1,12 +1,12 @@
 const pageTranslations = {
   "zh-CN": {
-    pageTitle: "mac-state 1.0.0",
+    pageTitle: "mac-state 1.0.1",
     metaDescription:
       "mac-state 是一个原生 macOS 菜单栏状态监测工具，强调轻量、实时、可配置，以及更克制的桌面体验。",
     navFeatures: "功能",
     navModules: "模块",
     navDownload: "下载",
-    eyebrowVersion: "版本 1.0.0",
+    eyebrowVersion: "版本 1.0.1",
     heroTitle: "一个原生的 macOS 菜单栏状态监测工具，轻、准、可控。",
     heroLede:
       "mac-state 把实时系统指标放回菜单栏该有的位置。先看最关键的信息，再按需打开细节，不把桌面变成一个喧闹的大屏监控台。",
@@ -20,7 +20,7 @@ const pageTranslations = {
     communityForkBody: "把你需要的监控模块和界面体验直接做进来。",
     communityReleaseKicker: "获取构建",
     communityReleaseTitle: "打开 Releases",
-    communityReleaseBody: "下载 1.0.0 构建、校验值和后续更新版本。",
+    communityReleaseBody: "下载 1.0.1 构建、校验值和后续更新版本。",
     heroStarLead: "如果你喜欢这个项目，",
     heroStarLink: "欢迎给它一个 Star。",
     highlightOne: "macOS 11+",
@@ -49,7 +49,7 @@ const pageTranslations = {
     brandTitle: "克制的中性色，只保留一个“活着”的信号色。",
     brandBody:
       "这套视觉系统故意不做“监控大屏风格”。logo 和页面都只让一个信号绿承担“实时状态”的含义，其余部分保持安静、技术感和原生工具感。",
-    shipsEyebrow: "1.0.0 包含什么",
+    shipsEyebrow: "1.0.1 包含什么",
     shipsTitle: "核心遥测能力已经齐了，同时还保留了收敛界面的空间。",
     moduleTagPerCore: "每核心 CPU",
     moduleTagMemory: "内存",
@@ -81,13 +81,13 @@ const pageTranslations = {
     downloadStarLink: "欢迎在 GitHub 上点亮 Star。",
   },
   en: {
-    pageTitle: "mac-state 1.0.0",
+    pageTitle: "mac-state 1.0.1",
     metaDescription:
       "mac-state is a native macOS menu bar monitor focused on being lightweight, live, configurable, and more disciplined than a noisy dashboard.",
     navFeatures: "Features",
     navModules: "Modules",
     navDownload: "Download",
-    eyebrowVersion: "Version 1.0.0",
+    eyebrowVersion: "Version 1.0.1",
     heroTitle: "A native macOS menu bar monitor that stays light, clear, and under control.",
     heroLede:
       "mac-state puts live system telemetry back where it belongs. See the essentials first, expand details only when you need them, and avoid turning the desktop into a noisy wall of monitoring panels.",
@@ -101,7 +101,7 @@ const pageTranslations = {
     communityForkBody: "Add the monitoring modules and interface changes you want to see.",
     communityReleaseKicker: "Get Builds",
     communityReleaseTitle: "Open Releases",
-    communityReleaseBody: "Download the 1.0.0 builds, checksums, and later updates.",
+    communityReleaseBody: "Download the 1.0.1 builds, checksums, and later updates.",
     heroStarLead: "If you like this project,",
     heroStarLink: "please give it a star on GitHub.",
     highlightOne: "macOS 11+",
@@ -130,7 +130,7 @@ const pageTranslations = {
     brandTitle: "Quiet neutrals, one live accent, and none of the usual dashboard theater.",
     brandBody:
       "The visual system intentionally avoids the wall-of-monitors aesthetic. The logo and page let a single signal green carry the idea of live status while the rest stays calm, technical, and native.",
-    shipsEyebrow: "What Ships In 1.0.0",
+    shipsEyebrow: "What Ships In 1.0.1",
     shipsTitle: "The core telemetry stack is already here, with enough restraint to keep the interface focused.",
     moduleTagPerCore: "Per-core CPU",
     moduleTagMemory: "Memory",

@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-VERSION="${1:-1.0.0}"
+VERSION="${1:-1.0.1}"
 BUILD_ROOT="$ROOT_DIR/dist/release-$VERSION"
 DERIVED_DATA_PATH="$BUILD_ROOT/DerivedData"
 APP_PATH="$DERIVED_DATA_PATH/Build/Products/Release/MacStateApp.app"
