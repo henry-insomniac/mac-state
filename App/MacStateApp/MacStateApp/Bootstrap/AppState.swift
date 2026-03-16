@@ -5,6 +5,17 @@ import MacStateStorage
 
 @MainActor
 final class AppState: ObservableObject {
+    struct RecentAlert: Identifiable, Equatable {
+        let type: MetricAlertType
+        let title: String
+        let body: String
+        let timestamp: Date
+
+        var id: String {
+            "\(type.rawValue)-\(timestamp.timeIntervalSince1970)"
+        }
+    }
+
     @Published var compactMenuBarText = true
     @Published private(set) var alertConfiguration = MetricAlertConfiguration()
     @Published private(set) var cpuUsage = 0.0
@@ -23,12 +34,14 @@ final class AppState: ObservableObject {
     @Published private(set) var batterySnapshot: BatterySnapshot?
     @Published private(set) var processes: [ProcessSnapshot] = []
     @Published private(set) var historySamples: [MetricHistorySample] = []
+    @Published private(set) var recentAlerts: [RecentAlert] = []
     @Published private(set) var platformSummary = "Detecting..."
     @Published private(set) var lastUpdatedAt = Date()
     @Published private(set) var errorMessage: String?
 
     private let settingsStore: SettingsStore
     private let historyStore: MetricHistoryStore
+    private var activeAlertTypes: Set<MetricAlertType> = []
 
     init(
         settingsStore: SettingsStore = SettingsStore(),
@@ -56,6 +69,34 @@ final class AppState: ObservableObject {
         }
 
         return "Cooldown \(alertConfiguration.clampedCooldownMinutes)m"
+    }
+
+    var alertsStatusText: String {
+        if alertConfiguration.hasEnabledRules == false {
+            return "Enable at least one rule to receive alerts"
+        }
+
+        if activeAlertTypes.isEmpty {
+            return "No alert conditions are currently active"
+        }
+
+        if activeAlertTypes.count == 1 {
+            return "1 alert condition is currently active"
+        }
+
+        return "\(activeAlertTypes.count) alert conditions are currently active"
+    }
+
+    var recentAlertsText: String {
+        if recentAlerts.isEmpty {
+            return "Recent alerts will appear here when a rule first becomes active"
+        }
+
+        if recentAlerts.count == 1 {
+            return "1 recent alert"
+        }
+
+        return "\(recentAlerts.count) recent alerts"
     }
 
     var cpuCoreCountText: String {
@@ -303,6 +344,30 @@ final class AppState: ObservableObject {
         }
     }
 
+    func updateAlertActivity(
+        with alerts: [MetricAlert],
+        at timestamp: Date
+    ) {
+        let nextActiveAlertTypes = Set(alerts.map(\.type))
+        let newlyActivatedAlerts = alerts.filter { activeAlertTypes.contains($0.type) == false }
+        activeAlertTypes = nextActiveAlertTypes
+
+        guard newlyActivatedAlerts.isEmpty == false else {
+            return
+        }
+
+        let recentEntries = newlyActivatedAlerts.map { alert in
+            RecentAlert(
+                type: alert.type,
+                title: alert.title,
+                body: alert.body,
+                timestamp: timestamp
+            )
+        }
+
+        recentAlerts = Array((recentEntries + recentAlerts).prefix(8))
+    }
+
     func apply(_ snapshot: MetricSnapshot) {
         cpuUsage = snapshot.cpuUsage
         cpuCores = snapshot.cpuCores
@@ -353,6 +418,14 @@ final class AppState: ObservableObject {
         let decimalPart = Int(abs((roundedValue - Double(wholePart)) * 10).rounded())
 
         return "\(wholePart).\(decimalPart)"
+    }
+
+    func recentAlertTimestampText(for alert: RecentAlert) -> String {
+        let components = Calendar.current.dateComponents([.hour, .minute], from: alert.timestamp)
+        let hour = components.hour ?? 0
+        let minute = components.minute ?? 0
+
+        return "\(twoDigitString(hour)):\(twoDigitString(minute))"
     }
 
     private func storageString(from bytes: UInt64) -> String {

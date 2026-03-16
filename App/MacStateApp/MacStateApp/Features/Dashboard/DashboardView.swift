@@ -96,6 +96,40 @@ struct DashboardView: View {
                         .foregroundColor(.secondary)
                 }
 
+                MetricCard("Alerts") {
+                    Text(appState.alertsStatusText)
+                        .font(.headline)
+
+                    Text(appState.alertsSummaryText)
+                        .foregroundColor(.secondary)
+
+                    Text(appState.recentAlertsText)
+                        .foregroundColor(.secondary)
+
+                    if appState.recentAlerts.isEmpty == false {
+                        VStack(alignment: .leading, spacing: 10) {
+                            ForEach(Array(appState.recentAlerts.prefix(4))) { alert in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack(alignment: .firstTextBaseline) {
+                                        Text(alert.title)
+                                            .bold()
+                                            .lineLimit(1)
+
+                                        Spacer()
+
+                                        Text(appState.recentAlertTimestampText(for: alert))
+                                            .foregroundColor(.secondary)
+                                    }
+
+                                    Text(alert.body)
+                                        .foregroundColor(.secondary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                            }
+                        }
+                    }
+                }
+
                 MetricCard("Trends") {
                     Text(appState.historySummaryText)
                         .foregroundColor(.secondary)

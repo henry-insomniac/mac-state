@@ -81,6 +81,10 @@ final class AppMetricsMonitor {
                     for: snapshot,
                     configuration: alertConfiguration
                 )
+                appState.updateAlertActivity(
+                    with: alerts,
+                    at: snapshot.timestamp
+                )
                 await alertNotificationService.deliver(
                     alerts: alerts,
                     cooldownMinutes: alertConfiguration.clampedCooldownMinutes
