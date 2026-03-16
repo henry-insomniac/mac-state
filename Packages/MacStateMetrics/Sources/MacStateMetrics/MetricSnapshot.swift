@@ -1,15 +1,42 @@
 import Foundation
 import MacStateFoundation
 
+public struct CPUCoreSnapshot: Sendable, Equatable, Identifiable {
+    public let index: Int
+    public let usage: Double
+
+    public init(
+        index: Int,
+        usage: Double
+    ) {
+        self.index = index
+        self.usage = usage
+    }
+
+    public var id: Int {
+        index
+    }
+}
+
 public struct DiskSnapshot: Sendable, Equatable {
     public let usedBytes: UInt64
     public let freeBytes: UInt64
     public let totalBytes: UInt64
+    public let readBytesPerSecond: UInt64
+    public let writeBytesPerSecond: UInt64
 
-    public init(usedBytes: UInt64, freeBytes: UInt64, totalBytes: UInt64) {
+    public init(
+        usedBytes: UInt64,
+        freeBytes: UInt64,
+        totalBytes: UInt64,
+        readBytesPerSecond: UInt64,
+        writeBytesPerSecond: UInt64
+    ) {
         self.usedBytes = usedBytes
         self.freeBytes = freeBytes
         self.totalBytes = totalBytes
+        self.readBytesPerSecond = readBytesPerSecond
+        self.writeBytesPerSecond = writeBytesPerSecond
     }
 }
 
@@ -60,6 +87,7 @@ public struct ProcessSnapshot: Sendable, Equatable, Identifiable {
 public struct MetricSnapshot: Sendable, Equatable {
     public let timestamp: Date
     public let cpuUsage: Double
+    public let cpuCores: [CPUCoreSnapshot]
     public let memoryUsage: Double
     public let memoryUsedBytes: UInt64
     public let memoryTotalBytes: UInt64
@@ -74,6 +102,7 @@ public struct MetricSnapshot: Sendable, Equatable {
     public init(
         timestamp: Date,
         cpuUsage: Double,
+        cpuCores: [CPUCoreSnapshot],
         memoryUsage: Double,
         memoryUsedBytes: UInt64,
         memoryTotalBytes: UInt64,
@@ -87,6 +116,7 @@ public struct MetricSnapshot: Sendable, Equatable {
     ) {
         self.timestamp = timestamp
         self.cpuUsage = cpuUsage
+        self.cpuCores = cpuCores
         self.memoryUsage = memoryUsage
         self.memoryUsedBytes = memoryUsedBytes
         self.memoryTotalBytes = memoryTotalBytes
@@ -105,13 +135,21 @@ public extension MetricSnapshot {
         MetricSnapshot(
             timestamp: now,
             cpuUsage: 0.18,
+            cpuCores: [
+                CPUCoreSnapshot(index: 0, usage: 0.22),
+                CPUCoreSnapshot(index: 1, usage: 0.17),
+                CPUCoreSnapshot(index: 2, usage: 0.29),
+                CPUCoreSnapshot(index: 3, usage: 0.08),
+            ],
             memoryUsage: 0.42,
             memoryUsedBytes: 6 * 1_024 * 1_024 * 1_024,
             memoryTotalBytes: 16 * 1_024 * 1_024 * 1_024,
             disk: DiskSnapshot(
                 usedBytes: 120 * 1_024 * 1_024 * 1_024,
                 freeBytes: 380 * 1_024 * 1_024 * 1_024,
-                totalBytes: 500 * 1_024 * 1_024 * 1_024
+                totalBytes: 500 * 1_024 * 1_024 * 1_024,
+                readBytesPerSecond: 1_024 * 1_024 * 8,
+                writeBytesPerSecond: 1_024 * 1_024 * 3
             ),
             networkDownloadBytesPerSecond: 1_024 * 1_024 * 12,
             networkUploadBytesPerSecond: 1_024 * 512,

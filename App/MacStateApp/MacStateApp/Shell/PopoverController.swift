@@ -18,7 +18,7 @@ final class PopoverController {
 
         popover = NSPopover()
         popover.behavior = .transient
-        popover.contentSize = NSSize(width: 400, height: 680)
+        popover.contentSize = NSSize(width: 420, height: 780)
         popover.contentViewController = NSHostingController(rootView: dashboardView)
     }
 

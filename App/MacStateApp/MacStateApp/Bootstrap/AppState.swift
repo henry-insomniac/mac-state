@@ -7,12 +7,15 @@ import MacStateStorage
 final class AppState: ObservableObject {
     @Published var compactMenuBarText = true
     @Published private(set) var cpuUsage = 0.0
+    @Published private(set) var cpuCores: [CPUCoreSnapshot] = []
     @Published private(set) var memoryUsage = 0.0
     @Published private(set) var memoryUsedBytes: UInt64 = 0
     @Published private(set) var memoryTotalBytes: UInt64 = 0
     @Published private(set) var diskUsedBytes: UInt64 = 0
     @Published private(set) var diskFreeBytes: UInt64 = 0
     @Published private(set) var diskTotalBytes: UInt64 = 0
+    @Published private(set) var diskReadBytesPerSecond: UInt64 = 0
+    @Published private(set) var diskWriteBytesPerSecond: UInt64 = 0
     @Published private(set) var networkDownloadBytesPerSecond: UInt64 = 0
     @Published private(set) var networkUploadBytesPerSecond: UInt64 = 0
     @Published private(set) var activeNetworkInterfaces = 0
@@ -46,6 +49,26 @@ final class AppState: ObservableObject {
         percentageString(from: cpuUsage)
     }
 
+    var cpuCoreCountText: String {
+        if cpuCores.isEmpty {
+            return "Collecting per-core usage"
+        }
+
+        if cpuCores.count == 1 {
+            return "1 logical core"
+        }
+
+        return "\(cpuCores.count) logical cores"
+    }
+
+    var cpuCoreTrendValues: [Double] {
+        cpuCores.map(\.usage)
+    }
+
+    func cpuCoreUsageText(for core: CPUCoreSnapshot) -> String {
+        percentageString(from: core.usage)
+    }
+
     var memoryUsageText: String {
         percentageString(from: memoryUsage)
     }
@@ -72,6 +95,18 @@ final class AppState: ObservableObject {
         }
 
         return "\(storageString(from: diskUsedBytes)) / \(storageString(from: diskTotalBytes)) used"
+    }
+
+    var diskReadRateText: String {
+        rateString(from: diskReadBytesPerSecond)
+    }
+
+    var diskWriteRateText: String {
+        rateString(from: diskWriteBytesPerSecond)
+    }
+
+    var diskActivityText: String {
+        "Read \(diskReadRateText) • Write \(diskWriteRateText)"
     }
 
     var downloadRateText: String {
@@ -170,6 +205,10 @@ final class AppState: ObservableObject {
         historySamples.map { Double($0.networkThroughputBytesPerSecond) }
     }
 
+    var diskTrendValues: [Double] {
+        historySamples.map { Double($0.diskThroughputBytesPerSecond) }
+    }
+
     var batteryTrendValues: [Double] {
         historySamples.compactMap(\.batteryLevel)
     }
@@ -197,12 +236,15 @@ final class AppState: ObservableObject {
 
     func apply(_ snapshot: MetricSnapshot) {
         cpuUsage = snapshot.cpuUsage
+        cpuCores = snapshot.cpuCores
         memoryUsage = snapshot.memoryUsage
         memoryUsedBytes = snapshot.memoryUsedBytes
         memoryTotalBytes = snapshot.memoryTotalBytes
         diskUsedBytes = snapshot.disk.usedBytes
         diskFreeBytes = snapshot.disk.freeBytes
         diskTotalBytes = snapshot.disk.totalBytes
+        diskReadBytesPerSecond = snapshot.disk.readBytesPerSecond
+        diskWriteBytesPerSecond = snapshot.disk.writeBytesPerSecond
         networkDownloadBytesPerSecond = snapshot.networkDownloadBytesPerSecond
         networkUploadBytesPerSecond = snapshot.networkUploadBytesPerSecond
         activeNetworkInterfaces = snapshot.activeNetworkInterfaces

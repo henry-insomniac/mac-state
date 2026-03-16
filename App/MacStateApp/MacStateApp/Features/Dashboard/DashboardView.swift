@@ -25,6 +25,38 @@ struct DashboardView: View {
                         .foregroundColor(.secondary)
                 }
 
+                MetricCard("CPU Cores") {
+                    Text(appState.cpuCoreCountText)
+                        .foregroundColor(.secondary)
+
+                    TrendStrip(values: appState.cpuCoreTrendValues, tint: .orange)
+
+                    LazyVGrid(
+                        columns: [
+                            GridItem(.flexible()),
+                            GridItem(.flexible()),
+                            GridItem(.flexible()),
+                            GridItem(.flexible()),
+                        ],
+                        alignment: .leading,
+                        spacing: 8
+                    ) {
+                        ForEach(appState.cpuCores) { core in
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Core \(core.index + 1)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+
+                                Text(appState.cpuCoreUsageText(for: core))
+                                    .bold()
+
+                                ProgressView(value: core.usage)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                }
+
                 MetricCard("Memory") {
                     Text(appState.memoryUsageText)
                         .font(.title2)
@@ -40,6 +72,9 @@ struct DashboardView: View {
                         .bold()
 
                     Text(appState.diskFootprintText)
+                        .foregroundColor(.secondary)
+
+                    Text(appState.diskActivityText)
                         .foregroundColor(.secondary)
                 }
 
@@ -85,6 +120,11 @@ struct DashboardView: View {
                             .font(.subheadline)
                             .bold()
                         TrendStrip(values: appState.batteryTrendValues, tint: .orange)
+
+                        Text("Disk")
+                            .font(.subheadline)
+                            .bold()
+                        TrendStrip(values: appState.diskTrendValues, tint: .gray)
                     }
                 }
 
@@ -142,6 +182,6 @@ struct DashboardView: View {
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(width: 400, height: 680)
+        .frame(width: 420, height: 780)
     }
 }

@@ -36,6 +36,15 @@ struct CPULoadCounters: Equatable {
 
         return min(max(Double(inUse) / Double(total), 0), 1)
     }
+
+    func adding(_ other: CPULoadCounters) -> CPULoadCounters {
+        CPULoadCounters(
+            user: user &+ other.user,
+            nice: nice &+ other.nice,
+            system: system &+ other.system,
+            idle: idle &+ other.idle
+        )
+    }
 }
 
 struct MemoryCounters: Equatable {
@@ -77,34 +86,79 @@ struct NetworkCounters: Equatable {
     }
 }
 
+struct DiskIOCounters: Equatable {
+    let timestamp: Date
+    let readBytes: UInt64
+    let writeBytes: UInt64
+
+    func rates(since previous: DiskIOCounters?) -> (read: UInt64, write: UInt64) {
+        guard let previous else {
+            return (0, 0)
+        }
+
+        let interval = timestamp.timeIntervalSince(previous.timestamp)
+        guard interval > 0 else {
+            return (0, 0)
+        }
+
+        let readDelta = readBytes >= previous.readBytes ? readBytes - previous.readBytes : 0
+        let writeDelta = writeBytes >= previous.writeBytes ? writeBytes - previous.writeBytes : 0
+
+        let readRate = UInt64((Double(readDelta) / interval).rounded())
+        let writeRate = UInt64((Double(writeDelta) / interval).rounded())
+
+        return (readRate, writeRate)
+    }
+}
+
 public actor LiveMetricsProvider: MetricsSnapshotProviding {
-    private var previousCPULoad: CPULoadCounters?
+    private var previousCoreLoads: [CPULoadCounters] = []
     private var previousNetworkCounters: NetworkCounters?
+    private var previousDiskIOCounters: DiskIOCounters?
 
     public init() {}
 
     public func snapshot() async throws -> MetricSnapshot {
         let timestamp = Date()
-        let currentCPULoad = try Self.readCPULoadCounters()
+        let currentCoreLoads = try Self.readCoreLoadCounters()
         let memoryCounters = try Self.readMemoryCounters()
-        let diskCounters = try Self.readDiskCounters()
+        let diskSpaceCounters = try Self.readDiskSpaceCounters()
+        let currentDiskIOCounters = try Self.readDiskIOCounters(at: timestamp)
         let currentNetworkCounters = try Self.readNetworkCounters(at: timestamp)
         let battery = Self.readBatterySnapshot()
         let processes = Self.readProcessSnapshots()
 
-        let cpuUsage = currentCPULoad.usage(since: previousCPULoad)
+        let cpuCores = Self.makeCPUCoreSnapshots(
+            from: currentCoreLoads,
+            previous: previousCoreLoads
+        )
+        let cpuUsage = (Self.makeAggregateCPULoad(from: currentCoreLoads) ?? CPULoadCounters(
+            user: 0,
+            nice: 0,
+            system: 0,
+            idle: 0
+        )).usage(since: Self.makeAggregateCPULoad(from: previousCoreLoads))
+        let diskRates = currentDiskIOCounters.rates(since: previousDiskIOCounters)
         let networkRates = currentNetworkCounters.rates(since: previousNetworkCounters)
 
-        previousCPULoad = currentCPULoad
+        previousCoreLoads = currentCoreLoads
+        previousDiskIOCounters = currentDiskIOCounters
         previousNetworkCounters = currentNetworkCounters
 
         return MetricSnapshot(
             timestamp: timestamp,
             cpuUsage: cpuUsage,
+            cpuCores: cpuCores,
             memoryUsage: memoryCounters.usage,
             memoryUsedBytes: memoryCounters.usedBytes,
             memoryTotalBytes: memoryCounters.totalBytes,
-            disk: diskCounters,
+            disk: DiskSnapshot(
+                usedBytes: diskSpaceCounters.usedBytes,
+                freeBytes: diskSpaceCounters.freeBytes,
+                totalBytes: diskSpaceCounters.totalBytes,
+                readBytesPerSecond: diskRates.read,
+                writeBytesPerSecond: diskRates.write
+            ),
             networkDownloadBytesPerSecond: networkRates.download,
             networkUploadBytesPerSecond: networkRates.upload,
             activeNetworkInterfaces: currentNetworkCounters.activeInterfaces,
@@ -116,32 +170,152 @@ public actor LiveMetricsProvider: MetricsSnapshotProviding {
 }
 
 private extension LiveMetricsProvider {
-    static func readCPULoadCounters() throws -> CPULoadCounters {
-        var load = host_cpu_load_info()
-        var count = mach_msg_type_number_t(
-            MemoryLayout<host_cpu_load_info_data_t>.stride / MemoryLayout<integer_t>.stride
+    static func readCoreLoadCounters() throws -> [CPULoadCounters] {
+        var processorCount: natural_t = 0
+        var infoArray: processor_info_array_t?
+        var infoCount: mach_msg_type_number_t = 0
+
+        let status = host_processor_info(
+            mach_host_self(),
+            PROCESSOR_CPU_LOAD_INFO,
+            &processorCount,
+            &infoArray,
+            &infoCount
         )
 
-        let status = withUnsafeMutablePointer(to: &load) { pointer in
-            pointer.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { reboundPointer in
-                host_statistics(
-                    mach_host_self(),
-                    HOST_CPU_LOAD_INFO,
-                    reboundPointer,
-                    &count
-                )
-            }
-        }
-
-        guard status == KERN_SUCCESS else {
+        guard status == KERN_SUCCESS,
+              let infoArray else {
             throw MetricsSamplingError.cpuCountersUnavailable(code: status)
         }
 
-        return CPULoadCounters(
-            user: load.cpu_ticks.0,
-            nice: load.cpu_ticks.1,
-            system: load.cpu_ticks.2,
-            idle: load.cpu_ticks.3
+        defer {
+            let byteCount = vm_size_t(infoCount) * vm_size_t(MemoryLayout<integer_t>.stride)
+            vm_deallocate(
+                mach_task_self_,
+                vm_address_t(bitPattern: infoArray),
+                byteCount
+            )
+        }
+
+        let coreCount = Int(processorCount)
+        let stride = Int(CPU_STATE_MAX)
+        var counters: [CPULoadCounters] = []
+        counters.reserveCapacity(coreCount)
+
+        for index in 0..<coreCount {
+            let offset = index * stride
+            counters.append(
+                CPULoadCounters(
+                    user: UInt32(infoArray[offset + Int(CPU_STATE_USER)]),
+                    nice: UInt32(infoArray[offset + Int(CPU_STATE_NICE)]),
+                    system: UInt32(infoArray[offset + Int(CPU_STATE_SYSTEM)]),
+                    idle: UInt32(infoArray[offset + Int(CPU_STATE_IDLE)])
+                )
+            )
+        }
+
+        return counters
+    }
+
+    static func makeAggregateCPULoad(from coreLoads: [CPULoadCounters]) -> CPULoadCounters? {
+        guard coreLoads.isEmpty == false else {
+            return nil
+        }
+
+        return coreLoads.reduce(
+            CPULoadCounters(user: 0, nice: 0, system: 0, idle: 0)
+        ) { partialResult, load in
+            partialResult.adding(load)
+        }
+    }
+
+    static func makeCPUCoreSnapshots(
+        from current: [CPULoadCounters],
+        previous: [CPULoadCounters]
+    ) -> [CPUCoreSnapshot] {
+        current.enumerated().map { index, load in
+            let previousLoad = previous.indices.contains(index) ? previous[index] : nil
+
+            return CPUCoreSnapshot(
+                index: index,
+                usage: load.usage(since: previousLoad)
+            )
+        }
+    }
+
+    static func readDiskSpaceCounters() throws -> (usedBytes: UInt64, freeBytes: UInt64, totalBytes: UInt64) {
+        let fileSystemAttributes = try FileManager.default.attributesOfFileSystem(forPath: NSHomeDirectory())
+
+        guard let totalBytesNumber = fileSystemAttributes[.systemSize] as? NSNumber,
+              let freeBytesNumber = fileSystemAttributes[.systemFreeSize] as? NSNumber else {
+            throw MetricsSamplingError.diskCountersUnavailable
+        }
+
+        let totalBytes = totalBytesNumber.uint64Value
+        let freeBytes = freeBytesNumber.uint64Value
+        let usedBytes = totalBytes > freeBytes ? totalBytes - freeBytes : 0
+
+        return (
+            usedBytes: usedBytes,
+            freeBytes: freeBytes,
+            totalBytes: totalBytes
+        )
+    }
+
+    static func readDiskIOCounters(at timestamp: Date) throws -> DiskIOCounters {
+        let processCount = proc_listallpids(nil, 0)
+        guard processCount >= 0 else {
+            throw MetricsSamplingError.diskCountersUnavailable
+        }
+
+        let byteCount = max(Int(processCount), 1) * MemoryLayout<pid_t>.stride
+        let rawBuffer = UnsafeMutableRawPointer.allocate(
+            byteCount: byteCount,
+            alignment: MemoryLayout<pid_t>.alignment
+        )
+
+        defer {
+            rawBuffer.deallocate()
+        }
+
+        let listedProcessCount = proc_listallpids(rawBuffer, Int32(byteCount))
+        guard listedProcessCount >= 0 else {
+            throw MetricsSamplingError.diskCountersUnavailable
+        }
+
+        let pids = rawBuffer.assumingMemoryBound(to: pid_t.self)
+        var totalReadBytes: UInt64 = 0
+        var totalWriteBytes: UInt64 = 0
+
+        for index in 0..<Int(listedProcessCount) {
+            let pid = pids[index]
+            guard pid > 0 else {
+                continue
+            }
+
+            var usageInfo = rusage_info_v4()
+            let result = withUnsafeMutablePointer(to: &usageInfo) { pointer in
+                proc_pid_rusage(
+                    pid,
+                    RUSAGE_INFO_V4,
+                    UnsafeMutableRawPointer(pointer).assumingMemoryBound(
+                        to: Optional<UnsafeMutableRawPointer>.self
+                    )
+                )
+            }
+
+            guard result == 0 else {
+                continue
+            }
+
+            totalReadBytes &+= usageInfo.ri_diskio_bytesread
+            totalWriteBytes &+= usageInfo.ri_diskio_byteswritten
+        }
+
+        return DiskIOCounters(
+            timestamp: timestamp,
+            readBytes: totalReadBytes,
+            writeBytes: totalWriteBytes
         )
     }
 
@@ -237,25 +411,6 @@ private extension LiveMetricsProvider {
             receivedBytes: totalReceivedBytes,
             sentBytes: totalSentBytes,
             activeInterfaces: activeInterfaceNames.count
-        )
-    }
-
-    static func readDiskCounters() throws -> DiskSnapshot {
-        let fileSystemAttributes = try FileManager.default.attributesOfFileSystem(forPath: NSHomeDirectory())
-
-        guard let totalBytesNumber = fileSystemAttributes[.systemSize] as? NSNumber,
-              let freeBytesNumber = fileSystemAttributes[.systemFreeSize] as? NSNumber else {
-            throw MetricsSamplingError.diskCountersUnavailable
-        }
-
-        let totalBytes = totalBytesNumber.uint64Value
-        let freeBytes = freeBytesNumber.uint64Value
-        let usedBytes = totalBytes > freeBytes ? totalBytes - freeBytes : 0
-
-        return DiskSnapshot(
-            usedBytes: usedBytes,
-            freeBytes: freeBytes,
-            totalBytes: totalBytes
         )
     }
 

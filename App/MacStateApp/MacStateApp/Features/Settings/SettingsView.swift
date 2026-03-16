@@ -29,7 +29,13 @@ struct SettingsView: View {
             Text("Disk footprint: \(appState.diskFootprintText)")
                 .foregroundColor(.secondary)
 
+            Text("Disk activity: \(appState.diskActivityText)")
+                .foregroundColor(.secondary)
+
             Text("Battery: \(appState.batteryDetailText)")
+                .foregroundColor(.secondary)
+
+            Text("Per-core CPU: \(appState.cpuCoreCountText)")
                 .foregroundColor(.secondary)
 
             Text("Dashboard app list: \(appState.runningAppsText)")
