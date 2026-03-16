@@ -6,6 +6,7 @@ enum DashboardLayout {
     static let popoverHeight: CGFloat = 780
     static let contentPadding: CGFloat = 16
     static let sectionSpacing: CGFloat = 16
+    static let overviewGridSpacing: CGFloat = 12
     static let coreGridSpacing: CGFloat = 12
     static let coreCardMinimumWidth: CGFloat = 160
     static let contentWidth: CGFloat = popoverWidth - (contentPadding * 2)
@@ -32,6 +33,49 @@ struct DashboardView: View {
                 Text(appState.text(.liveMacOSSystemMonitor))
                     .foregroundColor(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+
+                MetricCard(appState.text(.overview)) {
+                    LazyVGrid(
+                        columns: [
+                            GridItem(.flexible(minimum: 0), spacing: DashboardLayout.overviewGridSpacing),
+                            GridItem(.flexible(minimum: 0), spacing: DashboardLayout.overviewGridSpacing),
+                        ],
+                        alignment: .leading,
+                        spacing: DashboardLayout.overviewGridSpacing
+                    ) {
+                        OverviewMetricTile(
+                            appState.text(.cpu),
+                            value: appState.cpuUsageText,
+                            detail: appState.cpuCoreCountText,
+                            trendValues: appState.cpuTrendValues,
+                            tint: .orange
+                        )
+
+                        OverviewMetricTile(
+                            appState.text(.memory),
+                            value: appState.memoryUsageText,
+                            detail: appState.memoryFootprintText,
+                            trendValues: appState.memoryTrendValues,
+                            tint: .blue
+                        )
+
+                        OverviewMetricTile(
+                            appState.text(.network),
+                            value: appState.combinedNetworkRateText,
+                            detail: appState.networkStatusText,
+                            trendValues: appState.networkTrendValues,
+                            tint: .green
+                        )
+
+                        OverviewMetricTile(
+                            appState.text(.disk),
+                            value: appState.combinedDiskRateText,
+                            detail: appState.diskFootprintText,
+                            trendValues: appState.diskTrendValues,
+                            tint: .gray
+                        )
+                    }
+                }
 
                 MetricCard(appState.text(.cpu)) {
                     Text(appState.cpuUsageText)

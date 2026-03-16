@@ -10,6 +10,7 @@ enum AppTextKey {
     case battery
     case sensors
     case network
+    case overview
     case alerts
     case trends
     case runningApps
@@ -131,6 +132,8 @@ enum AppText {
             return "传感器"
         case (.simplifiedChinese, .network):
             return "网络"
+        case (.simplifiedChinese, .overview):
+            return "总览"
         case (.simplifiedChinese, .alerts):
             return "告警"
         case (.simplifiedChinese, .trends):
@@ -336,6 +339,8 @@ enum AppText {
             return "Sensors"
         case (.english, .network):
             return "Network"
+        case (.english, .overview):
+            return "Overview"
         case (.english, .alerts):
             return "Alerts"
         case (.english, .trends):

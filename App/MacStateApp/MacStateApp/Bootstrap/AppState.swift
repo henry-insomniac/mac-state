@@ -402,6 +402,12 @@ final class AppState: ObservableObject {
             : "Read \(diskReadRateText) • Write \(diskWriteRateText)"
     }
 
+    var combinedDiskRateText: String {
+        resolvedLanguage == .simplifiedChinese
+            ? "读 \(diskReadRateText) 写 \(diskWriteRateText)"
+            : "R \(diskReadRateText) W \(diskWriteRateText)"
+    }
+
     var downloadRateText: String {
         rateString(from: networkDownloadBytesPerSecond)
     }
