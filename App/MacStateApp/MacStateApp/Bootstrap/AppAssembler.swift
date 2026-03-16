@@ -3,8 +3,12 @@ import MacStateStorage
 
 @MainActor
 enum AppAssembler {
+    private static let legacyLoginHelperBundleIdentifier = "io.github.henry-insomniac.mac-state.login-helper"
+
     static func makeLiveContainer() -> DependencyContainer {
-        let launchAtLoginService = SystemLaunchAtLoginService()
+        let launchAtLoginService = SystemLaunchAtLoginService(
+            legacyHelperBundleIdentifier: legacyLoginHelperBundleIdentifier
+        )
         let settingsStore = SettingsStore()
         let historyStore = MetricHistoryStore()
         let alertNotificationService = AlertNotificationService()

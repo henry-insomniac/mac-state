@@ -99,8 +99,12 @@ final class AppState: ObservableObject {
     var launchAtLoginDetailText: String {
         switch launchAtLoginStatus.availability {
         case .requiresLegacyHelper:
-            return "The main app already runs on macOS 11+, but the bundled login helper target still needs to be wired in for older systems."
+            return "The legacy login helper is required on macOS 11 and 12, but it is not available in the current build."
         case .supported:
+            if PlatformCapabilities.current.supportsModernLoginItems == false {
+                return "macOS 11 and 12 use the bundled login helper app inside Contents/Library/LoginItems."
+            }
+
             if launchAtLoginStatus.requiresApproval {
                 return "Approve mac-state in System Settings > General > Login Items, then refresh the status here."
             }

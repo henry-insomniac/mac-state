@@ -23,7 +23,18 @@
 		A10000000000000000000041 /* MacStateMetrics in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000061 /* MacStateMetrics */; };
 		A10000000000000000000042 /* MacStateStorage in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000062 /* MacStateStorage */; };
 		A10000000000000000000043 /* MacStateUI in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000063 /* MacStateUI */; };
+		A10000000000000000000070 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000073 /* main.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A1000000000000000000007F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A10000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A10000000000000000000077;
+			remoteInfo = MacStateLoginHelper;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		A1000000000000000000000B /* MacStateApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacStateApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -39,6 +50,8 @@
 		A10000000000000000000029 /* AppMetricsMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMetricsMonitor.swift; sourceTree = "<group>"; };
 		A1000000000000000000002A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A1000000000000000000002B /* AlertNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertNotificationService.swift; sourceTree = "<group>"; };
+		A10000000000000000000072 /* MacStateLoginHelper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacStateLoginHelper.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000000000000000000073 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,6 +66,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A10000000000000000000076 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -60,6 +80,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000000000000000000004 /* MacStateApp */,
+				A10000000000000000000074 /* MacStateLoginHelper */,
 				A10000000000000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -68,6 +89,7 @@
 			isa = PBXGroup;
 			children = (
 				A1000000000000000000000B /* MacStateApp.app */,
+				A10000000000000000000072 /* MacStateLoginHelper.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -139,6 +161,22 @@
 			path = Settings;
 			sourceTree = "<group>";
 		};
+		A10000000000000000000074 /* MacStateLoginHelper */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000075 /* App */,
+			);
+			path = MacStateLoginHelper;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000075 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000073 /* main.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -149,10 +187,12 @@
 				A1000000000000000000000D /* Sources */,
 				A1000000000000000000000E /* Frameworks */,
 				A1000000000000000000000F /* Resources */,
+				A1000000000000000000007A /* Embed Login Helper */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				A1000000000000000000007B /* PBXTargetDependency */,
 			);
 			name = MacStateApp;
 			packageProductDependencies = (
@@ -163,6 +203,23 @@
 			);
 			productName = MacStateApp;
 			productReference = A1000000000000000000000B /* MacStateApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A10000000000000000000077 /* MacStateLoginHelper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1000000000000000000007E /* Build configuration list for PBXNativeTarget "MacStateLoginHelper" */;
+			buildPhases = (
+				A10000000000000000000079 /* Sources */,
+				A10000000000000000000076 /* Frameworks */,
+				A10000000000000000000078 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MacStateLoginHelper;
+			productName = MacStateLoginHelper;
+			productReference = A10000000000000000000072 /* MacStateLoginHelper.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -176,6 +233,9 @@
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					A1000000000000000000000C = {
+						CreatedOnToolsVersion = 26.2;
+					};
+					A10000000000000000000077 = {
 						CreatedOnToolsVersion = 26.2;
 					};
 				};
@@ -200,6 +260,7 @@
 			projectRoot = "";
 			targets = (
 				A1000000000000000000000C /* MacStateApp */,
+				A10000000000000000000077 /* MacStateLoginHelper */,
 			);
 		};
 /* End PBXProject section */
@@ -212,7 +273,37 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A10000000000000000000078 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		A1000000000000000000007A /* Embed Login Helper */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/MacStateLoginHelper.app",
+			);
+			name = "Embed Login Helper";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Library/LoginItems/MacStateLoginHelper.app",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -euo pipefail\nHELPER_SRC=\"${BUILT_PRODUCTS_DIR}/MacStateLoginHelper.app\"\nHELPER_DST=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Library/LoginItems/MacStateLoginHelper.app\"\nmkdir -p \"$(dirname \"$HELPER_DST\")\"\nrm -rf \"$HELPER_DST\"\nditto \"$HELPER_SRC\" \"$HELPER_DST\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		A1000000000000000000000D /* Sources */ = {
@@ -234,7 +325,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A10000000000000000000079 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000070 /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A1000000000000000000007B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = MacStateLoginHelper;
+			target = A10000000000000000000077 /* MacStateLoginHelper */;
+			targetProxy = A1000000000000000000007F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCLocalSwiftPackageReference section */
 		A10000000000000000000050 /* XCLocalSwiftPackageReference "../../Packages/MacStateFoundation" */ = {
@@ -346,6 +454,49 @@
 			};
 			name = Release;
 		};
+		A1000000000000000000007C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "MacStateLoginHelper";
+				INFOPLIST_KEY_LSUIElement = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.henry-insomniac.mac-state.login-helper";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		A1000000000000000000007D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "MacStateLoginHelper";
+				INFOPLIST_KEY_LSUIElement = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.henry-insomniac.mac-state.login-helper";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -363,6 +514,15 @@
 			buildConfigurations = (
 				A10000000000000000000014 /* Debug */,
 				A10000000000000000000015 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1000000000000000000007E /* Build configuration list for PBXNativeTarget "MacStateLoginHelper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1000000000000000000007C /* Debug */,
+				A1000000000000000000007D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

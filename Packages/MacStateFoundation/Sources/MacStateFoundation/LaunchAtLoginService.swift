@@ -26,38 +26,56 @@ public enum LaunchAtLoginError: LocalizedError, Sendable, Equatable {
 
 @MainActor
 public final class SystemLaunchAtLoginService: LaunchAtLoginService {
-    public init() {}
+    private let legacyHelperBundleIdentifier: String?
+
+    public init(legacyHelperBundleIdentifier: String? = nil) {
+        self.legacyHelperBundleIdentifier = legacyHelperBundleIdentifier
+    }
 
     public func status() -> LaunchAtLoginStatus {
-        guard #available(macOS 13.0, *) else {
-            return .legacyHelperRequired
+        if #available(macOS 13.0, *) {
+            return status(for: SMAppService.mainApp.status)
         }
 
-        return status(for: SMAppService.mainApp.status)
+        return legacyStatus()
     }
 
     public func setEnabled(_ enabled: Bool) throws -> LaunchAtLoginStatus {
-        guard #available(macOS 13.0, *) else {
+        if #available(macOS 13.0, *) {
+            let service = SMAppService.mainApp
+            let currentStatus = status(for: service.status)
+
+            if enabled == currentStatus.isEnabled,
+               currentStatus.requiresApproval == false {
+                return currentStatus
+            }
+
+            do {
+                if enabled {
+                    try service.register()
+                } else {
+                    try service.unregister()
+                }
+            } catch {
+                let message = (error as NSError).localizedDescription
+
+                if enabled {
+                    throw LaunchAtLoginError.registrationFailed(message)
+                }
+
+                throw LaunchAtLoginError.unregistrationFailed(message)
+            }
+
+            return status(for: service.status)
+        }
+
+        guard let legacyHelperBundleIdentifier else {
             throw LaunchAtLoginError.legacyHelperRequired
         }
 
-        let service = SMAppService.mainApp
-        let currentStatus = status(for: service.status)
-
-        if enabled == currentStatus.isEnabled,
-           currentStatus.requiresApproval == false {
-            return currentStatus
-        }
-
-        do {
-            if enabled {
-                try service.register()
-            } else {
-                try service.unregister()
-            }
-        } catch {
-            let message = (error as NSError).localizedDescription
-
+        let didApplyChange = SMLoginItemSetEnabled(legacyHelperBundleIdentifier as CFString, enabled)
+        guard didApplyChange else {
+            let message = "ServiceManagement rejected the legacy login item update."
             if enabled {
                 throw LaunchAtLoginError.registrationFailed(message)
             }
@@ -65,7 +83,32 @@ public final class SystemLaunchAtLoginService: LaunchAtLoginService {
             throw LaunchAtLoginError.unregistrationFailed(message)
         }
 
-        return status(for: service.status)
+        return legacyStatus()
+    }
+
+    private func legacyStatus() -> LaunchAtLoginStatus {
+        guard let legacyHelperBundleIdentifier else {
+            return .legacyHelperRequired
+        }
+
+        let jobDictionaries = legacyJobDictionaries()
+        let isRegistered = jobDictionaries.contains { dictionary in
+            (dictionary["Label"] as? String) == legacyHelperBundleIdentifier
+        }
+
+        return LaunchAtLoginStatus(
+            availability: .supported,
+            registrationState: isRegistered ? .enabled : .disabled
+        )
+    }
+
+    private func legacyJobDictionaries() -> [[String: Any]] {
+        guard let dictionaries = SMCopyAllJobDictionaries(kSMDomainUserLaunchd) else {
+            return []
+        }
+
+        let bridgedDictionaries = dictionaries.takeRetainedValue() as NSArray
+        return bridgedDictionaries.compactMap { $0 as? [String: Any] }
     }
 
     @available(macOS 13.0, *)

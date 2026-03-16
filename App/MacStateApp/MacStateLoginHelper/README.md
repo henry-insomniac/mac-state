@@ -1,6 +1,5 @@
 # MacStateLoginHelper
 
-This folder is reserved for the login item helper that will support launch-at-login compatibility for older macOS versions.
+This folder contains the legacy login item helper used for `macOS 11-12`.
 
-The helper target is intentionally not wired into the initial bootstrap yet. The main app project keeps the directory in place so the helper can be added without restructuring the repository.
-
+The helper lives inside the main app bundle at `Contents/Library/LoginItems` and launches the parent app in the background during user login.
