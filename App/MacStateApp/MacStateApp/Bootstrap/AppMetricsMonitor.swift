@@ -1,4 +1,5 @@
 import Foundation
+import MacStateFoundation
 import MacStateMetrics
 import MacStateStorage
 
@@ -8,18 +9,21 @@ final class AppMetricsMonitor {
     private let metricsProvider: any MetricsSnapshotProviding
     private let historyStore: MetricHistoryStore
     private let alertNotificationService: AlertNotificationService
+    private let sharedWidgetSnapshotStore: SharedWidgetSnapshotStore
     private var refreshTask: Task<Void, Never>?
 
     init(
         appState: AppState,
         metricsProvider: any MetricsSnapshotProviding = LiveMetricsProvider(),
         historyStore: MetricHistoryStore = MetricHistoryStore(),
-        alertNotificationService: AlertNotificationService = AlertNotificationService()
+        alertNotificationService: AlertNotificationService = AlertNotificationService(),
+        sharedWidgetSnapshotStore: SharedWidgetSnapshotStore = SharedWidgetSnapshotStore()
     ) {
         self.appState = appState
         self.metricsProvider = metricsProvider
         self.historyStore = historyStore
         self.alertNotificationService = alertNotificationService
+        self.sharedWidgetSnapshotStore = sharedWidgetSnapshotStore
     }
 
     func start() {
@@ -74,6 +78,7 @@ final class AppMetricsMonitor {
             appState.apply(snapshot)
             appState.applyHistory(historyTimeline)
             appState.setErrorMessage(nil)
+            sharedWidgetSnapshotStore.save(WidgetSnapshot(snapshot: snapshot))
 
             if alertConfiguration.hasEnabledRules {
                 await alertNotificationService.requestAuthorizationIfNeeded()

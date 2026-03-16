@@ -11,6 +11,7 @@ enum AppAssembler {
         )
         let settingsStore = SettingsStore()
         let historyStore = MetricHistoryStore()
+        let sharedWidgetSnapshotStore = SharedWidgetSnapshotStore()
         let alertNotificationService = AlertNotificationService()
         let appState = AppState(
             launchAtLoginService: launchAtLoginService,
@@ -20,7 +21,8 @@ enum AppAssembler {
         let metricsMonitor = AppMetricsMonitor(
             appState: appState,
             historyStore: historyStore,
-            alertNotificationService: alertNotificationService
+            alertNotificationService: alertNotificationService,
+            sharedWidgetSnapshotStore: sharedWidgetSnapshotStore
         )
 
         return DependencyContainer(

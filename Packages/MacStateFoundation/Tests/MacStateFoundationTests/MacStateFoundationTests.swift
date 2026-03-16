@@ -1,5 +1,6 @@
 import Testing
 @testable import MacStateFoundation
+import Foundation
 
 @Test func architectureIdentifierMatchesCurrentMachine() {
     #if arch(arm64)
@@ -42,4 +43,16 @@ import Testing
 
     #expect(presentation.textMode == .selectedMetric)
     #expect(presentation.primaryMetric == .cpuUsage)
+}
+
+@Test func sharedWidgetSnapshotStoreRoundTripsSnapshot() {
+    let fileURL = FileManager.default.temporaryDirectory
+        .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        .appendingPathComponent("widget-snapshot.json", isDirectory: false)
+    let store = SharedWidgetSnapshotStore(fileURL: fileURL)
+
+    store.save(.placeholder)
+    let restored = store.load()
+
+    #expect(restored == .placeholder)
 }

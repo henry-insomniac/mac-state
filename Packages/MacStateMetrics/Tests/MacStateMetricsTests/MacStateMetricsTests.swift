@@ -139,3 +139,20 @@ import MacStateFoundation
     #expect(alerts.map(\.type).contains(.batteryLowLevel))
     #expect(alerts.map(\.type).contains(.diskActivityHigh))
 }
+
+@Test func widgetSnapshotCopiesRelevantMetricFields() {
+    let snapshot = MetricSnapshot.placeholder(
+        now: Date(timeIntervalSince1970: 400)
+    )
+
+    let widgetSnapshot = WidgetSnapshot(snapshot: snapshot)
+
+    #expect(widgetSnapshot.timestamp == snapshot.timestamp)
+    #expect(widgetSnapshot.cpuUsage == snapshot.cpuUsage)
+    #expect(widgetSnapshot.memoryUsage == snapshot.memoryUsage)
+    #expect(widgetSnapshot.diskReadBytesPerSecond == snapshot.disk.readBytesPerSecond)
+    #expect(widgetSnapshot.diskWriteBytesPerSecond == snapshot.disk.writeBytesPerSecond)
+    #expect(widgetSnapshot.networkDownloadBytesPerSecond == snapshot.networkDownloadBytesPerSecond)
+    #expect(widgetSnapshot.networkUploadBytesPerSecond == snapshot.networkUploadBytesPerSecond)
+    #expect(widgetSnapshot.batteryLevel == snapshot.battery?.level)
+}
