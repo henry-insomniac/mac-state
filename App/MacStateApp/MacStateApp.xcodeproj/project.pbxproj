@@ -16,8 +16,11 @@
 		A10000000000000000000036 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000026 /* StatusItemController.swift */; };
 		A10000000000000000000037 /* WindowRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000027 /* WindowRouter.swift */; };
 		A10000000000000000000038 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000028 /* DashboardView.swift */; };
-		A10000000000000000000039 /* DashboardMetricCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000029 /* DashboardMetricCardView.swift */; };
 		A1000000000000000000003A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000002A /* SettingsView.swift */; };
+		A10000000000000000000040 /* MacStateFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000060 /* MacStateFoundation */; };
+		A10000000000000000000041 /* MacStateMetrics in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000061 /* MacStateMetrics */; };
+		A10000000000000000000042 /* MacStateStorage in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000062 /* MacStateStorage */; };
+		A10000000000000000000043 /* MacStateUI in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000063 /* MacStateUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,7 +34,6 @@
 		A10000000000000000000026 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
 		A10000000000000000000027 /* WindowRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowRouter.swift; sourceTree = "<group>"; };
 		A10000000000000000000028 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
-		A10000000000000000000029 /* DashboardMetricCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardMetricCardView.swift; sourceTree = "<group>"; };
 		A1000000000000000000002A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -40,6 +42,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000000000000000000040 /* MacStateFoundation in Frameworks */,
+				A10000000000000000000041 /* MacStateMetrics in Frameworks */,
+				A10000000000000000000042 /* MacStateStorage in Frameworks */,
+				A10000000000000000000043 /* MacStateUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -114,7 +120,6 @@
 		A10000000000000000000009 /* Dashboard */ = {
 			isa = PBXGroup;
 			children = (
-				A10000000000000000000029 /* DashboardMetricCardView.swift */,
 				A10000000000000000000028 /* DashboardView.swift */,
 			);
 			path = Dashboard;
@@ -144,6 +149,12 @@
 			dependencies = (
 			);
 			name = MacStateApp;
+			packageProductDependencies = (
+				A10000000000000000000060 /* MacStateFoundation */,
+				A10000000000000000000061 /* MacStateMetrics */,
+				A10000000000000000000062 /* MacStateStorage */,
+				A10000000000000000000063 /* MacStateUI */,
+			);
 			productName = MacStateApp;
 			productReference = A1000000000000000000000B /* MacStateApp.app */;
 			productType = "com.apple.product-type.application";
@@ -172,6 +183,12 @@
 				Base,
 			);
 			mainGroup = A10000000000000000000002;
+			packageReferences = (
+				A10000000000000000000050 /* XCLocalSwiftPackageReference "../../Packages/MacStateFoundation" */,
+				A10000000000000000000051 /* XCLocalSwiftPackageReference "../../Packages/MacStateMetrics" */,
+				A10000000000000000000052 /* XCLocalSwiftPackageReference "../../Packages/MacStateStorage" */,
+				A10000000000000000000053 /* XCLocalSwiftPackageReference "../../Packages/MacStateUI" */,
+			);
 			productRefGroup = A10000000000000000000003 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -204,13 +221,54 @@
 				A10000000000000000000035 /* PopoverController.swift in Sources */,
 				A10000000000000000000036 /* StatusItemController.swift in Sources */,
 				A10000000000000000000037 /* WindowRouter.swift in Sources */,
-				A10000000000000000000039 /* DashboardMetricCardView.swift in Sources */,
 				A10000000000000000000038 /* DashboardView.swift in Sources */,
 				A1000000000000000000003A /* SettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		A10000000000000000000050 /* XCLocalSwiftPackageReference "../../Packages/MacStateFoundation" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../Packages/MacStateFoundation;
+		};
+		A10000000000000000000051 /* XCLocalSwiftPackageReference "../../Packages/MacStateMetrics" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../Packages/MacStateMetrics;
+		};
+		A10000000000000000000052 /* XCLocalSwiftPackageReference "../../Packages/MacStateStorage" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../Packages/MacStateStorage;
+		};
+		A10000000000000000000053 /* XCLocalSwiftPackageReference "../../Packages/MacStateUI" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../Packages/MacStateUI;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A10000000000000000000060 /* MacStateFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000000000000000000050 /* XCLocalSwiftPackageReference "../../Packages/MacStateFoundation" */;
+			productName = MacStateFoundation;
+		};
+		A10000000000000000000061 /* MacStateMetrics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000000000000000000051 /* XCLocalSwiftPackageReference "../../Packages/MacStateMetrics" */;
+			productName = MacStateMetrics;
+		};
+		A10000000000000000000062 /* MacStateStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000000000000000000052 /* XCLocalSwiftPackageReference "../../Packages/MacStateStorage" */;
+			productName = MacStateStorage;
+		};
+		A10000000000000000000063 /* MacStateUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000000000000000000053 /* XCLocalSwiftPackageReference "../../Packages/MacStateUI" */;
+			productName = MacStateUI;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A10000000000000000000012 /* Debug */ = {
@@ -247,6 +305,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "io.github.henry-insomniac.mac-state";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;
@@ -272,6 +331,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "io.github.henry-insomniac.mac-state";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;

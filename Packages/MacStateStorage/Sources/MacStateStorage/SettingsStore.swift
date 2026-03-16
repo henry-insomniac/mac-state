@@ -1,13 +1,17 @@
-public actor SettingsStore {
-    private var boolValues: [SettingsKey: Bool] = [:]
+import Foundation
 
-    public init() {}
+public actor SettingsStore {
+    private let defaults: UserDefaults
+
+    public init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
 
     public func bool(for key: SettingsKey) -> Bool {
-        boolValues[key] ?? false
+        defaults.bool(forKey: key.rawValue)
     }
 
     public func set(_ value: Bool, for key: SettingsKey) {
-        boolValues[key] = value
+        defaults.set(value, forKey: key.rawValue)
     }
 }

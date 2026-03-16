@@ -18,7 +18,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
         NSApp.mainMenu = makeMainMenu()
+        container.appState.start()
         statusItemController.start()
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        container.appState.stop()
     }
 
     @objc

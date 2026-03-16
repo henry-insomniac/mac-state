@@ -1,4 +1,5 @@
 import SwiftUI
+import MacStateUI
 
 struct DashboardView: View {
     @ObservedObject var appState: AppState
@@ -11,35 +12,49 @@ struct DashboardView: View {
                     .font(.title2)
                     .bold()
 
-                Text("Native macOS system monitor bootstrap")
+                Text("Live macOS system monitor")
                     .foregroundColor(.secondary)
 
-                DashboardMetricCardView(
-                    title: "CPU",
-                    value: appState.cpuUsageText,
-                    subtitle: "Menu bar headline metric"
-                )
+                MetricCard("CPU") {
+                    Text(appState.cpuUsageText)
+                        .font(.title2)
+                        .bold()
 
-                DashboardMetricCardView(
-                    title: "Memory",
-                    value: appState.memoryUsageText,
-                    subtitle: "Placeholder snapshot for the app shell"
-                )
+                    Text("Architecture: \(appState.platformSummary)")
+                        .foregroundColor(.secondary)
+                }
 
-                DashboardMetricCardView(
-                    title: "Network",
-                    value: appState.downloadRateText,
-                    subtitle: "Upload \(appState.uploadRateText)"
-                )
+                MetricCard("Memory") {
+                    Text(appState.memoryUsageText)
+                        .font(.title2)
+                        .bold()
+
+                    Text(appState.memoryFootprintText)
+                        .foregroundColor(.secondary)
+                }
+
+                MetricCard("Network") {
+                    Text(appState.downloadRateText)
+                        .font(.title2)
+                        .bold()
+
+                    Text("Upload \(appState.uploadRateText) • \(appState.networkStatusText)")
+                        .foregroundColor(.secondary)
+                }
 
                 Text("Last updated \(appState.lastUpdatedText)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
 
+                if let errorMessage = appState.errorMessage {
+                    Text(errorMessage)
+                        .foregroundColor(.secondary)
+                }
+
                 Button {
-                    appState.refreshPreviewData()
+                    appState.refreshNow()
                 } label: {
-                    Label("Refresh Demo Metrics", systemImage: "arrow.clockwise")
+                    Label("Refresh Metrics", systemImage: "arrow.clockwise")
                 }
 
                 Button {
