@@ -43,7 +43,7 @@ This repository currently contains a working MVP foundation:
 
 - macOS app shell with menu bar controller and popover host
 - live CPU, per-core CPU, memory, disk, network, battery, and running app metrics
-- short-term metric history with lightweight persistence
+- live history window with recent raw samples and 24-hour minute-level aggregates
 - configurable local alerts for CPU, memory, battery, and disk activity
 - launch-at-login control across macOS 11+, using `SMAppService` on macOS 13+ and a bundled helper on macOS 11-12
 - settings window for compact mode and alert thresholds

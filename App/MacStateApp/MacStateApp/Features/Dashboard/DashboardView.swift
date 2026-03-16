@@ -4,6 +4,7 @@ import MacStateUI
 struct DashboardView: View {
     @ObservedObject var appState: AppState
     let refreshMetrics: @MainActor () -> Void
+    let openHistory: @MainActor () -> Void
     let openSettings: @MainActor () -> Void
 
     var body: some View {
@@ -205,6 +206,12 @@ struct DashboardView: View {
                     refreshMetrics()
                 } label: {
                     Label("Refresh Metrics", systemImage: "arrow.clockwise")
+                }
+
+                Button {
+                    openHistory()
+                } label: {
+                    Label("Open History", systemImage: "chart.xyaxis.line")
                 }
 
                 Button {

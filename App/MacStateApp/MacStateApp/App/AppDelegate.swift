@@ -9,6 +9,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         refreshMetrics: { [weak self] in
             self?.container.metricsMonitor.refreshNow()
         },
+        openHistory: { [weak self] in
+            self?.openHistory(nil)
+        },
         openSettings: { [weak self] in
             self?.openSettings(nil)
         }
@@ -33,6 +36,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         container.metricsMonitor.stop()
+    }
+
+    @objc
+    private func openHistory(_ sender: Any?) {
+        NSApp.activate(ignoringOtherApps: true)
+        windowRouter.showHistory()
     }
 
     @objc
@@ -65,6 +74,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             withTitle: "Settings…",
             action: #selector(openSettings(_:)),
             keyEquivalent: ","
+        )
+        applicationMenu.addItem(
+            withTitle: "History",
+            action: #selector(openHistory(_:)),
+            keyEquivalent: ""
         )
         applicationMenu.addItem(.separator())
         applicationMenu.addItem(

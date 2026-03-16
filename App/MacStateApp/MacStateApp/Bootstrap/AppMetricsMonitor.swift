@@ -68,11 +68,11 @@ final class AppMetricsMonitor {
     private func refreshMetrics() async {
         do {
             let snapshot = try await metricsProvider.snapshot()
-            let historySamples = await historyStore.append(snapshot: snapshot)
+            let historyTimeline = await historyStore.append(snapshot: snapshot)
             let alertConfiguration = appState.alertConfiguration
 
             appState.apply(snapshot)
-            appState.applyHistory(historySamples)
+            appState.applyHistory(historyTimeline)
             appState.setErrorMessage(nil)
 
             if alertConfiguration.hasEnabledRules {

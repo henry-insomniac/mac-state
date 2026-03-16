@@ -8,11 +8,13 @@ final class PopoverController {
     init(
         appState: AppState,
         refreshMetrics: @escaping @MainActor () -> Void,
+        openHistory: @escaping @MainActor () -> Void,
         openSettings: @escaping @MainActor () -> Void
     ) {
         let dashboardView = DashboardView(
             appState: appState,
             refreshMetrics: refreshMetrics,
+            openHistory: openHistory,
             openSettings: openSettings
         )
 

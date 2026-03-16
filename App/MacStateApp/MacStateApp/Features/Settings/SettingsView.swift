@@ -153,7 +153,7 @@ struct SettingsView: View {
                 Text("Dashboard app list: \(appState.runningAppsText)")
                     .foregroundColor(.secondary)
 
-                Text("Trend cache: \(appState.historySummaryText)")
+                Text("Trend cache: \(appState.historyStorageSummaryText)")
                     .foregroundColor(.secondary)
 
                 Text("Last updated \(appState.lastUpdatedText)")

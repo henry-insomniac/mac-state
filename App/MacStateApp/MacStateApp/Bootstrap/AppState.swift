@@ -39,6 +39,7 @@ final class AppState: ObservableObject {
     @Published private(set) var batterySnapshot: BatterySnapshot?
     @Published private(set) var processes: [ProcessSnapshot] = []
     @Published private(set) var historySamples: [MetricHistorySample] = []
+    @Published private(set) var dayHistorySamples: [MetricHistorySample] = []
     @Published private(set) var recentAlerts: [RecentAlert] = []
     @Published private(set) var platformSummary = "Detecting..."
     @Published private(set) var lastUpdatedAt = Date()
@@ -271,18 +272,22 @@ final class AppState: ObservableObject {
     }
 
     var historySummaryText: String {
-        guard let firstSample = historySamples.first,
-              let lastSample = historySamples.last else {
+        historySummaryText(for: historySamples)
+    }
+
+    var dayHistorySummaryText: String {
+        historySummaryText(for: dayHistorySamples)
+    }
+
+    var historyStorageSummaryText: String {
+        let recentCount = historySamples.count
+        let dayCount = dayHistorySamples.count
+
+        if recentCount == 0, dayCount == 0 {
             return "History populates after the first successful samples"
         }
 
-        let interval = max(lastSample.timestamp.timeIntervalSince(firstSample.timestamp), 0)
-
-        if interval < 60 {
-            return "\(historySamples.count) samples across \(Int(interval.rounded()))s"
-        }
-
-        return "\(historySamples.count) samples across \(durationString(fromMinutes: Int((interval / 60).rounded())))"
+        return "\(recentCount) live samples and \(dayCount) minute buckets"
     }
 
     var cpuTrendValues: [Double] {
@@ -321,7 +326,9 @@ final class AppState: ObservableObject {
         ) {
             alertConfiguration = restoredAlertConfiguration
         }
-        historySamples = await historyStore.samples()
+        let historyTimeline = await historyStore.timeline()
+        historySamples = historyTimeline.recentSamples
+        dayHistorySamples = historyTimeline.daySamples
         refreshLaunchAtLoginStatus()
     }
 
@@ -449,8 +456,9 @@ final class AppState: ObservableObject {
         lastUpdatedAt = snapshot.timestamp
     }
 
-    func applyHistory(_ samples: [MetricHistorySample]) {
-        historySamples = samples
+    func applyHistory(_ timeline: MetricHistoryArchive) {
+        historySamples = timeline.recentSamples
+        dayHistorySamples = timeline.daySamples
     }
 
     func setErrorMessage(_ message: String?) {
@@ -460,6 +468,21 @@ final class AppState: ObservableObject {
     private func percentageString(from value: Double) -> String {
         let percentage = Int((value * 100).rounded())
         return "\(percentage)%"
+    }
+
+    func historySummaryText(for samples: [MetricHistorySample]) -> String {
+        guard let firstSample = samples.first,
+              let lastSample = samples.last else {
+            return "History populates after the first successful samples"
+        }
+
+        let interval = max(lastSample.timestamp.timeIntervalSince(firstSample.timestamp), 0)
+
+        if interval < 60 {
+            return "\(samples.count) samples across \(Int(interval.rounded()))s"
+        }
+
+        return "\(samples.count) samples across \(durationString(fromMinutes: Int((interval / 60).rounded())))"
     }
 
     private func updateAlertConfiguration(
