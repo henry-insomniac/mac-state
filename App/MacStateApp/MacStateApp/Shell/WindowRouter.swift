@@ -48,8 +48,9 @@ final class WindowRouter {
 
         let window = NSWindow(contentViewController: hostingController)
         window.title = appState.text(.settings)
-        window.styleMask = [.titled, .closable, .miniaturizable]
-        window.setContentSize(NSSize(width: 520, height: 560))
+        window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
+        window.setContentSize(NSSize(width: 760, height: 820))
+        window.minSize = NSSize(width: 680, height: 720)
 
         return window
     }

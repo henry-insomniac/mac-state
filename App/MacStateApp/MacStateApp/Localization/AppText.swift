@@ -48,8 +48,12 @@ enum AppTextKey {
     case openHistory
     case openSettings
     case settings
+    case settingsSubtitle
+    case general
+    case generalSummary
     case launchAtLogin
     case refreshLaunchAtLoginStatus
+    case menuBar
     case menuBarText
     case primaryMetric
     case preview
@@ -63,7 +67,10 @@ enum AppTextKey {
     case diskThreshold
     case alertCooldown
     case alertsUseLocalNotifications
+    case alertsSectionSummary
     case language
+    case diagnostics
+    case diagnosticsSummary
     case currentArchitecture
     case diskFootprint
     case diskActivityLabel
@@ -79,6 +86,11 @@ enum AppTextKey {
     case trendCache
     case lastUpdated
     case aboutApp
+    case aboutSummary
+    case appVersion
+    case buildNumber
+    case compatibility
+    case openAboutPanel
     case hideApp
     case hideOthers
     case showAll
@@ -191,10 +203,18 @@ enum AppText {
             return "打开设置"
         case (.simplifiedChinese, .settings):
             return "设置"
+        case (.simplifiedChinese, .settingsSubtitle):
+            return "调整启动方式、菜单栏展示、告警规则和应用信息。"
+        case (.simplifiedChinese, .general):
+            return "通用"
+        case (.simplifiedChinese, .generalSummary):
+            return "语言和基础应用行为。"
         case (.simplifiedChinese, .launchAtLogin):
             return "登录时启动 mac-state"
         case (.simplifiedChinese, .refreshLaunchAtLoginStatus):
             return "刷新登录启动状态"
+        case (.simplifiedChinese, .menuBar):
+            return "菜单栏"
         case (.simplifiedChinese, .menuBarText):
             return "菜单栏文本"
         case (.simplifiedChinese, .primaryMetric):
@@ -221,8 +241,14 @@ enum AppText {
             return "告警冷却时间"
         case (.simplifiedChinese, .alertsUseLocalNotifications):
             return "授予通知权限后，告警会通过本地通知发送。"
+        case (.simplifiedChinese, .alertsSectionSummary):
+            return "只开启你关心的告警，并调整对应阈值。"
         case (.simplifiedChinese, .language):
             return "语言"
+        case (.simplifiedChinese, .diagnostics):
+            return "诊断"
+        case (.simplifiedChinese, .diagnosticsSummary):
+            return "显示最近一次采样的关键状态，方便快速确认。"
         case (.simplifiedChinese, .currentArchitecture):
             return "当前架构"
         case (.simplifiedChinese, .diskFootprint):
@@ -253,6 +279,16 @@ enum AppText {
             return "最后更新"
         case (.simplifiedChinese, .aboutApp):
             return "关于 mac-state"
+        case (.simplifiedChinese, .aboutSummary):
+            return "面向 Intel 与 Apple Silicon 的原生开源 macOS 状态监测工具。"
+        case (.simplifiedChinese, .appVersion):
+            return "版本"
+        case (.simplifiedChinese, .buildNumber):
+            return "构建"
+        case (.simplifiedChinese, .compatibility):
+            return "兼容性"
+        case (.simplifiedChinese, .openAboutPanel):
+            return "打开 macOS 关于面板"
         case (.simplifiedChinese, .hideApp):
             return "隐藏 mac-state"
         case (.simplifiedChinese, .hideOthers):
@@ -364,10 +400,18 @@ enum AppText {
             return "Open Settings"
         case (.english, .settings):
             return "Settings"
+        case (.english, .settingsSubtitle):
+            return "Adjust startup behavior, menu bar presentation, alerts, and app details."
+        case (.english, .general):
+            return "General"
+        case (.english, .generalSummary):
+            return "Language and basic application behavior."
         case (.english, .launchAtLogin):
             return "Launch mac-state at login"
         case (.english, .refreshLaunchAtLoginStatus):
             return "Refresh Launch at Login Status"
+        case (.english, .menuBar):
+            return "Menu Bar"
         case (.english, .menuBarText):
             return "Menu bar text"
         case (.english, .primaryMetric):
@@ -394,8 +438,14 @@ enum AppText {
             return "Alert cooldown"
         case (.english, .alertsUseLocalNotifications):
             return "Alerts use local notifications after notification permission is granted."
+        case (.english, .alertsSectionSummary):
+            return "Enable only the alerts you care about and tune their thresholds."
         case (.english, .language):
             return "Language"
+        case (.english, .diagnostics):
+            return "Diagnostics"
+        case (.english, .diagnosticsSummary):
+            return "Latest sampled values for quick verification and troubleshooting."
         case (.english, .currentArchitecture):
             return "Current architecture"
         case (.english, .diskFootprint):
@@ -426,6 +476,16 @@ enum AppText {
             return "Last updated"
         case (.english, .aboutApp):
             return "About mac-state"
+        case (.english, .aboutSummary):
+            return "Open-source native macOS monitor built for Intel and Apple Silicon."
+        case (.english, .appVersion):
+            return "Version"
+        case (.english, .buildNumber):
+            return "Build"
+        case (.english, .compatibility):
+            return "Compatibility"
+        case (.english, .openAboutPanel):
+            return "Open macOS About Panel"
         case (.english, .hideApp):
             return "Hide mac-state"
         case (.english, .hideOthers):

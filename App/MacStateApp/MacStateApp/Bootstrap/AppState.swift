@@ -557,6 +557,15 @@ final class AppState: ObservableObject {
         }
     }
 
+    var compatibilityText: String {
+        switch resolvedLanguage {
+        case .simplifiedChinese:
+            return "macOS 11+ • Intel 与 Apple Silicon"
+        case .english, .system:
+            return "macOS 11+ • Intel and Apple Silicon"
+        }
+    }
+
     func loadPersistedState() async {
         if let storedAppLanguage = await settingsStore.codableValue(
             for: .appLanguage,
