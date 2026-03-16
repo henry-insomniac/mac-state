@@ -167,6 +167,27 @@ struct SettingsView: View {
                 Text("Battery: \(appState.batteryDetailText)")
                     .foregroundColor(.secondary)
 
+                Text("Thermal condition: \(appState.thermalConditionText)")
+                    .foregroundColor(.secondary)
+
+                Text("Sensor source: \(appState.sensorSourceText)")
+                    .foregroundColor(.secondary)
+
+                Text("CPU temperature: \(appState.cpuTemperatureText)")
+                    .foregroundColor(.secondary)
+
+                Text("GPU temperature: \(appState.gpuTemperatureText)")
+                    .foregroundColor(.secondary)
+
+                Text("Battery temperature: \(appState.batteryTemperatureText)")
+                    .foregroundColor(.secondary)
+
+                Text("Cooling: \(appState.fanStatusText)")
+                    .foregroundColor(.secondary)
+
+                Text(appState.sensorAvailabilityText)
+                    .foregroundColor(.secondary)
+
                 Text("Per-core CPU: \(appState.cpuCoreCountText)")
                     .foregroundColor(.secondary)
 

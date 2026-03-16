@@ -20,6 +20,8 @@ import MacStateFoundation
     #expect(snapshot.networkUploadBytesPerSecond >= 0)
     #expect(snapshot.processes.isEmpty == false)
     #expect(snapshot.battery?.level ?? 0 >= 0)
+    #expect(snapshot.sensors.hasTemperatureTelemetry == true)
+    #expect(snapshot.sensors.hasFanTelemetry == true)
 }
 
 @Test func cpuUsageUsesDeltaBetweenSamples() {
@@ -114,6 +116,21 @@ import MacStateFoundation
             isOnBatteryPower: true,
             timeRemainingMinutes: 25
         ),
+        sensors: SensorSnapshot(
+            thermalCondition: .serious,
+            sourceDescription: "Test sensor data",
+            cpuTemperatureCelsius: 92,
+            gpuTemperatureCelsius: 74,
+            batteryTemperatureCelsius: 35,
+            fans: [
+                FanSnapshot(
+                    index: 0,
+                    currentRPM: 3_500,
+                    minimumRPM: 1_200,
+                    maximumRPM: 5_500
+                ),
+            ]
+        ),
         processes: [],
         platform: PlatformCapabilities.current
     )
@@ -155,4 +172,11 @@ import MacStateFoundation
     #expect(widgetSnapshot.networkDownloadBytesPerSecond == snapshot.networkDownloadBytesPerSecond)
     #expect(widgetSnapshot.networkUploadBytesPerSecond == snapshot.networkUploadBytesPerSecond)
     #expect(widgetSnapshot.batteryLevel == snapshot.battery?.level)
+}
+
+@Test func thermalConditionMapsFromProcessInfoValues() {
+    #expect(ThermalCondition(processInfoThermalState: .nominal) == .nominal)
+    #expect(ThermalCondition(processInfoThermalState: .fair) == .fair)
+    #expect(ThermalCondition(processInfoThermalState: .serious) == .serious)
+    #expect(ThermalCondition(processInfoThermalState: .critical) == .critical)
 }

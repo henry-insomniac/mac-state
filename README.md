@@ -45,6 +45,7 @@ This repository currently contains a working MVP foundation:
 - customizable menu bar indicators for CPU, memory, network, disk, and battery
 - macOS Widget extension backed by an App Group snapshot shared from the main app
 - live CPU, per-core CPU, memory, disk, network, battery, and running app metrics
+- thermal state, battery temperature, and low-level CPU/GPU/fan sensor bridging where available
 - live history window with recent raw samples, 24-hour minute-level aggregates, and CSV export
 - configurable local alerts for CPU, memory, battery, and disk activity
 - launch-at-login control across macOS 11+, using `SMAppService` on macOS 13+ and a bundled helper on macOS 11-12

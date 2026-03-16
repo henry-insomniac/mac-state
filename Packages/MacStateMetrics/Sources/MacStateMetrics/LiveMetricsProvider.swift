@@ -115,17 +115,20 @@ public actor LiveMetricsProvider: MetricsSnapshotProviding {
     private var previousCoreLoads: [CPULoadCounters] = []
     private var previousNetworkCounters: NetworkCounters?
     private var previousDiskIOCounters: DiskIOCounters?
+    private let sensorBridge = SensorBridge()
 
     public init() {}
 
     public func snapshot() async throws -> MetricSnapshot {
         let timestamp = Date()
+        let platform = PlatformCapabilities.current
         let currentCoreLoads = try Self.readCoreLoadCounters()
         let memoryCounters = try Self.readMemoryCounters()
         let diskSpaceCounters = try Self.readDiskSpaceCounters()
         let currentDiskIOCounters = try Self.readDiskIOCounters(at: timestamp)
         let currentNetworkCounters = try Self.readNetworkCounters(at: timestamp)
         let battery = Self.readBatterySnapshot()
+        let sensors = sensorBridge.snapshot(platform: platform)
         let processes = Self.readProcessSnapshots()
 
         let cpuCores = Self.makeCPUCoreSnapshots(
@@ -163,8 +166,9 @@ public actor LiveMetricsProvider: MetricsSnapshotProviding {
             networkUploadBytesPerSecond: networkRates.upload,
             activeNetworkInterfaces: currentNetworkCounters.activeInterfaces,
             battery: battery,
+            sensors: sensors,
             processes: processes,
-            platform: .current
+            platform: platform
         )
     }
 }

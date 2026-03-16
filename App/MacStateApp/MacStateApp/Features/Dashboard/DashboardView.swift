@@ -88,6 +88,83 @@ struct DashboardView: View {
                         .foregroundColor(.secondary)
                 }
 
+                MetricCard("Sensors") {
+                    Text(appState.thermalConditionText)
+                        .font(.title3)
+                        .bold()
+
+                    Text(appState.thermalConditionDetailText)
+                        .foregroundColor(.secondary)
+
+                    Text(appState.sensorSourceText)
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(alignment: .firstTextBaseline) {
+                            Text("CPU")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+
+                            Spacer()
+
+                            Text(appState.cpuTemperatureText)
+                                .bold()
+                        }
+
+                        HStack(alignment: .firstTextBaseline) {
+                            Text("GPU")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+
+                            Spacer()
+
+                            Text(appState.gpuTemperatureText)
+                                .bold()
+                        }
+
+                        HStack(alignment: .firstTextBaseline) {
+                            Text("Battery")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+
+                            Spacer()
+
+                            Text(appState.batteryTemperatureText)
+                                .bold()
+                        }
+                    }
+
+                    Text(appState.fanStatusText)
+                        .foregroundColor(.secondary)
+
+                    if appState.sensors.fans.isEmpty == false {
+                        VStack(alignment: .leading, spacing: 8) {
+                            ForEach(appState.sensors.fans) { fan in
+                                HStack(alignment: .firstTextBaseline) {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Fan \(fan.index + 1)")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+
+                                        Text(appState.fanRangeText(for: fan))
+                                            .foregroundColor(.secondary)
+                                    }
+
+                                    Spacer()
+
+                                    Text(appState.fanSpeedText(for: fan))
+                                        .bold()
+                                }
+                            }
+                        }
+                    }
+
+                    Text(appState.sensorAvailabilityText)
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
                 MetricCard("Network") {
                     Text(appState.downloadRateText)
                         .font(.title2)

@@ -37,6 +37,14 @@ final class AppState: ObservableObject {
     @Published private(set) var networkUploadBytesPerSecond: UInt64 = 0
     @Published private(set) var activeNetworkInterfaces = 0
     @Published private(set) var batterySnapshot: BatterySnapshot?
+    @Published private(set) var sensors = SensorSnapshot(
+        thermalCondition: .nominal,
+        sourceDescription: "Collecting sensor telemetry",
+        cpuTemperatureCelsius: nil,
+        gpuTemperatureCelsius: nil,
+        batteryTemperatureCelsius: nil,
+        fans: []
+    )
     @Published private(set) var processes: [ProcessSnapshot] = []
     @Published private(set) var historySamples: [MetricHistorySample] = []
     @Published private(set) var dayHistorySamples: [MetricHistorySample] = []
@@ -307,6 +315,77 @@ final class AppState: ObservableObject {
         return powerText
     }
 
+    var thermalConditionText: String {
+        sensors.thermalCondition.title
+    }
+
+    var thermalConditionDetailText: String {
+        sensors.thermalCondition.detailText
+    }
+
+    var sensorSourceText: String {
+        sensors.sourceDescription
+    }
+
+    var cpuTemperatureText: String {
+        temperatureString(from: sensors.cpuTemperatureCelsius)
+    }
+
+    var gpuTemperatureText: String {
+        temperatureString(from: sensors.gpuTemperatureCelsius)
+    }
+
+    var batteryTemperatureText: String {
+        temperatureString(from: sensors.batteryTemperatureCelsius)
+    }
+
+    var sensorAvailabilityText: String {
+        var unavailableSignals: [String] = []
+
+        if sensors.cpuTemperatureCelsius == nil {
+            unavailableSignals.append("CPU temperature")
+        }
+
+        if sensors.gpuTemperatureCelsius == nil {
+            unavailableSignals.append("GPU temperature")
+        }
+
+        if sensors.fans.isEmpty {
+            unavailableSignals.append("fan telemetry")
+        }
+
+        guard unavailableSignals.isEmpty == false else {
+            return "Live temperature and fan telemetry are available."
+        }
+
+        return unavailableSignals.joined(separator: ", ") + " currently unavailable."
+    }
+
+    var fanStatusText: String {
+        if sensors.fans.isEmpty {
+            return "Fan telemetry unavailable"
+        }
+
+        if sensors.fans.count == 1 {
+            return "1 fan reporting"
+        }
+
+        return "\(sensors.fans.count) fans reporting"
+    }
+
+    func fanSpeedText(for fan: FanSnapshot) -> String {
+        "\(fan.currentRPM) RPM"
+    }
+
+    func fanRangeText(for fan: FanSnapshot) -> String {
+        guard let minimumRPM = fan.minimumRPM,
+              let maximumRPM = fan.maximumRPM else {
+            return "Range unavailable"
+        }
+
+        return "\(minimumRPM)-\(maximumRPM) RPM"
+    }
+
     var runningAppsText: String {
         if processes.isEmpty {
             return "No visible apps"
@@ -516,6 +595,7 @@ final class AppState: ObservableObject {
         networkUploadBytesPerSecond = snapshot.networkUploadBytesPerSecond
         activeNetworkInterfaces = snapshot.activeNetworkInterfaces
         batterySnapshot = snapshot.battery
+        sensors = snapshot.sensors
         processes = snapshot.processes
         platformSummary = snapshot.platform.architecture.rawValue
         lastUpdatedAt = snapshot.timestamp
@@ -649,6 +729,14 @@ final class AppState: ObservableObject {
         }
 
         return "\(bytesPerSecond) B/s"
+    }
+
+    private func temperatureString(from value: Double?) -> String {
+        guard let value else {
+            return "Unavailable"
+        }
+
+        return "\(decimalString(from: value)) C"
     }
 
     private func twoDigitString(_ value: Int) -> String {

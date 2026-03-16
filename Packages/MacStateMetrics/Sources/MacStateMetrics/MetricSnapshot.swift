@@ -96,6 +96,7 @@ public struct MetricSnapshot: Sendable, Equatable {
     public let networkUploadBytesPerSecond: UInt64
     public let activeNetworkInterfaces: Int
     public let battery: BatterySnapshot?
+    public let sensors: SensorSnapshot
     public let processes: [ProcessSnapshot]
     public let platform: PlatformCapabilities
 
@@ -111,6 +112,7 @@ public struct MetricSnapshot: Sendable, Equatable {
         networkUploadBytesPerSecond: UInt64,
         activeNetworkInterfaces: Int,
         battery: BatterySnapshot?,
+        sensors: SensorSnapshot,
         processes: [ProcessSnapshot],
         platform: PlatformCapabilities
     ) {
@@ -125,6 +127,7 @@ public struct MetricSnapshot: Sendable, Equatable {
         self.networkUploadBytesPerSecond = networkUploadBytesPerSecond
         self.activeNetworkInterfaces = activeNetworkInterfaces
         self.battery = battery
+        self.sensors = sensors
         self.processes = processes
         self.platform = platform
     }
@@ -160,6 +163,27 @@ public extension MetricSnapshot {
                 isCharging: false,
                 isOnBatteryPower: true,
                 timeRemainingMinutes: 140
+            ),
+            sensors: SensorSnapshot(
+                thermalCondition: .nominal,
+                sourceDescription: "Placeholder sensor telemetry.",
+                cpuTemperatureCelsius: 58.0,
+                gpuTemperatureCelsius: 51.0,
+                batteryTemperatureCelsius: 33.8,
+                fans: [
+                    FanSnapshot(
+                        index: 0,
+                        currentRPM: 2_100,
+                        minimumRPM: 1_200,
+                        maximumRPM: 5_500
+                    ),
+                    FanSnapshot(
+                        index: 1,
+                        currentRPM: 2_150,
+                        minimumRPM: 1_200,
+                        maximumRPM: 5_500
+                    ),
+                ]
             ),
             processes: [
                 ProcessSnapshot(pid: 101, name: "Xcode", isFrontmost: true),
