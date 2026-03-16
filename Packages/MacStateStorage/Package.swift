@@ -30,6 +30,7 @@ let package = Package(
             name: "MacStateStorageTests",
             dependencies: [
                 "MacStateStorage",
+                .product(name: "MacStateFoundation", package: "MacStateFoundation"),
                 .product(name: "MacStateMetrics", package: "MacStateMetrics"),
             ]
         ),

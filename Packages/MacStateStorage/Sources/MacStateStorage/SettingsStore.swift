@@ -13,6 +13,14 @@ public actor SettingsStore {
         defaults.bool(forKey: key.rawValue)
     }
 
+    public func boolValue(for key: SettingsKey) -> Bool? {
+        guard defaults.object(forKey: key.rawValue) != nil else {
+            return nil
+        }
+
+        return defaults.bool(forKey: key.rawValue)
+    }
+
     public func set(_ value: Bool, for key: SettingsKey) {
         defaults.set(value, forKey: key.rawValue)
     }

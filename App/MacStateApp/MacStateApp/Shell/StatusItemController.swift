@@ -39,15 +39,22 @@ final class StatusItemController: NSObject {
 
         button.action = #selector(togglePopover(_:))
         button.target = self
-        button.image = NSImage(
-            systemSymbolName: "waveform.path.ecg",
-            accessibilityDescription: "mac-state"
-        )
-        button.imagePosition = .imageLeading
+        render()
     }
 
     private func render() {
-        statusItem.button?.title = appState.menuBarTitle
+        guard let button = statusItem.button else {
+            return
+        }
+
+        button.title = appState.menuBarTitle
+        button.toolTip = appState.menuBarAccessibilityLabel
+        button.image = NSImage(
+            systemSymbolName: appState.menuBarSymbolName,
+            accessibilityDescription: appState.menuBarAccessibilityLabel
+        )
+        button.imagePosition = appState.menuBarTitle.isEmpty ? .imageOnly : .imageLeading
+        statusItem.length = appState.menuBarTitle.isEmpty ? NSStatusItem.squareLength : NSStatusItem.variableLength
     }
 
     private func observePublishedValues() {

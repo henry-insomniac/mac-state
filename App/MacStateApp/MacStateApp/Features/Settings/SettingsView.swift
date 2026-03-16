@@ -1,4 +1,5 @@
 import SwiftUI
+import MacStateFoundation
 
 struct SettingsView: View {
     @ObservedObject var appState: AppState
@@ -35,15 +36,34 @@ struct SettingsView: View {
             }
 
             Section {
-                Toggle(
-                    "Show compact menu bar text",
-                    isOn: Binding(
-                        get: { appState.compactMenuBarText },
-                        set: { appState.setCompactMenuBarText($0) }
+                Picker(
+                    "Menu bar text",
+                    selection: Binding(
+                        get: { appState.menuBarPresentation.textMode },
+                        set: { appState.setMenuBarTextMode($0) }
                     )
-                )
+                ) {
+                    ForEach(MenuBarTextMode.allCases, id: \.self) { textMode in
+                        Text(textMode.title).tag(textMode)
+                    }
+                }
 
-                Text("When enabled, the status item shows a compact CPU summary next to the icon.")
+                Picker(
+                    "Primary metric",
+                    selection: Binding(
+                        get: { appState.menuBarPresentation.primaryMetric },
+                        set: { appState.setMenuBarPrimaryMetric($0) }
+                    )
+                ) {
+                    ForEach(MenuBarPrimaryMetric.allCases, id: \.self) { metric in
+                        Text(metric.title).tag(metric)
+                    }
+                }
+
+                Text(appState.menuBarSettingsSummaryText)
+                    .foregroundColor(.secondary)
+
+                Text("Preview: \(appState.menuBarPreviewText) · \(appState.menuBarMetricTitle)")
                     .foregroundColor(.secondary)
             }
 

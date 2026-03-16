@@ -36,3 +36,10 @@ import Testing
     #expect(legacyStatus.isEnabled == false)
     #expect(legacyStatus.requiresApproval == false)
 }
+
+@Test func menuBarPresentationDefaultsMatchAppPolicy() {
+    let presentation = MenuBarPresentation.default
+
+    #expect(presentation.textMode == .selectedMetric)
+    #expect(presentation.primaryMetric == .cpuUsage)
+}

@@ -1,6 +1,7 @@
 import Testing
 @testable import MacStateStorage
 import Foundation
+import MacStateFoundation
 import MacStateMetrics
 
 @Test func settingsStoreReadsValuesThatWereWritten() async {
@@ -13,6 +14,16 @@ import MacStateMetrics
     let value = await store.bool(for: .compactMenuBarText)
 
     #expect(value == true)
+}
+
+@Test func settingsStoreReportsMissingBoolAsNil() async {
+    let defaults = UserDefaults(suiteName: #function)!
+    defaults.removePersistentDomain(forName: #function)
+    let store = SettingsStore(defaults: defaults)
+
+    let value = await store.boolValue(for: .compactMenuBarText)
+
+    #expect(value == nil)
 }
 
 @Test func metricHistoryStoreRetainsMostRecentSamples() async {
@@ -123,6 +134,25 @@ import MacStateMetrics
     )
 
     #expect(restored == configuration)
+}
+
+@Test func settingsStoreReadsMenuBarPresentationThatWasWritten() async {
+    let defaults = UserDefaults(suiteName: #function)!
+    defaults.removePersistentDomain(forName: #function)
+    let store = SettingsStore(defaults: defaults)
+    let presentation = MenuBarPresentation(
+        textMode: .iconOnly,
+        primaryMetric: .networkDownload
+    )
+
+    await store.set(presentation, for: .menuBarPresentation)
+
+    let restored = await store.codableValue(
+        for: .menuBarPresentation,
+        as: MenuBarPresentation.self
+    )
+
+    #expect(restored == presentation)
 }
 
 private func temporaryHistoryFileURL(named name: String) -> URL {

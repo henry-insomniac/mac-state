@@ -17,7 +17,7 @@ final class AppState: ObservableObject {
         }
     }
 
-    @Published var compactMenuBarText = true
+    @Published private(set) var menuBarPresentation = MenuBarPresentation.default
     @Published private(set) var alertConfiguration = MetricAlertConfiguration()
     @Published private(set) var launchAtLoginStatus = LaunchAtLoginStatus(
         availability: PlatformCapabilities.current.supportsModernLoginItems ? .supported : .requiresLegacyHelper,
@@ -62,15 +62,63 @@ final class AppState: ObservableObject {
     }
 
     var menuBarTitle: String {
-        guard compactMenuBarText else {
+        switch menuBarPresentation.textMode {
+        case .iconOnly:
+            return ""
+        case .appName:
             return "mac-state"
+        case .selectedMetric:
+            return menuBarMetricText
+        }
+    }
+
+    var menuBarSymbolName: String {
+        menuBarPresentation.primaryMetric.symbolName
+    }
+
+    var menuBarAccessibilityLabel: String {
+        let metricTitle = menuBarPresentation.primaryMetric.title
+        let metricText = menuBarMetricText
+
+        if menuBarPresentation.textMode == .appName {
+            return "mac-state, \(metricTitle) \(metricText)"
         }
 
-        return "mac-state \(percentageString(from: cpuUsage))"
+        if menuBarPresentation.textMode == .iconOnly {
+            return "\(metricTitle) \(metricText)"
+        }
+
+        return "mac-state \(metricText)"
+    }
+
+    var menuBarSettingsSummaryText: String {
+        switch menuBarPresentation.textMode {
+        case .selectedMetric:
+            return "The menu bar shows \(menuBarPresentation.primaryMetric.title.lowercased()) as live text."
+        case .appName:
+            return "The menu bar keeps the app name visible and uses the metric icon for quick context."
+        case .iconOnly:
+            return "The menu bar stays icon-only and keeps the selected metric ready for future text mode."
+        }
+    }
+
+    var menuBarPreviewText: String {
+        switch menuBarPresentation.textMode {
+        case .selectedMetric:
+            return menuBarMetricText
+        case .appName:
+            return "mac-state"
+        case .iconOnly:
+            return "Icon only"
+        }
     }
 
     var cpuUsageText: String {
         percentageString(from: cpuUsage)
+    }
+
+    var menuBarMetricTitle: String {
+        menuBarPresentation.primaryMetric.title
     }
 
     var alertsSummaryText: String {
@@ -319,7 +367,20 @@ final class AppState: ObservableObject {
     }
 
     func loadPersistedState() async {
-        compactMenuBarText = await settingsStore.bool(for: .compactMenuBarText)
+        if let storedMenuBarPresentation = await settingsStore.codableValue(
+            for: .menuBarPresentation,
+            as: MenuBarPresentation.self
+        ) {
+            menuBarPresentation = storedMenuBarPresentation
+        } else if let legacyCompactMenuBarText = await settingsStore.boolValue(for: .compactMenuBarText) {
+            menuBarPresentation = MenuBarPresentation(
+                textMode: legacyCompactMenuBarText ? .selectedMetric : .appName,
+                primaryMetric: .cpuUsage
+            )
+        } else {
+            menuBarPresentation = .default
+        }
+
         if let restoredAlertConfiguration = await settingsStore.codableValue(
             for: .alertConfiguration,
             as: MetricAlertConfiguration.self
@@ -332,11 +393,15 @@ final class AppState: ObservableObject {
         refreshLaunchAtLoginStatus()
     }
 
-    func setCompactMenuBarText(_ value: Bool) {
-        compactMenuBarText = value
+    func setMenuBarTextMode(_ value: MenuBarTextMode) {
+        updateMenuBarPresentation { presentation in
+            presentation.textMode = value
+        }
+    }
 
-        Task {
-            await settingsStore.set(value, for: .compactMenuBarText)
+    func setMenuBarPrimaryMetric(_ value: MenuBarPrimaryMetric) {
+        updateMenuBarPresentation { presentation in
+            presentation.primaryMetric = value
         }
     }
 
@@ -470,6 +535,23 @@ final class AppState: ObservableObject {
         return "\(percentage)%"
     }
 
+    private var menuBarMetricText: String {
+        switch menuBarPresentation.primaryMetric {
+        case .cpuUsage:
+            cpuUsageText
+        case .memoryUsage:
+            memoryUsageText
+        case .networkDownload:
+            downloadRateText
+        case .networkUpload:
+            uploadRateText
+        case .diskActivity:
+            rateString(from: diskReadBytesPerSecond + diskWriteBytesPerSecond)
+        case .batteryLevel:
+            batterySnapshot == nil ? "n/a" : batteryStatusText
+        }
+    }
+
     func historySummaryText(for samples: [MetricHistorySample]) -> String {
         guard let firstSample = samples.first,
               let lastSample = samples.last else {
@@ -493,6 +575,17 @@ final class AppState: ObservableObject {
 
         Task {
             await settingsStore.set(alertConfiguration, for: .alertConfiguration)
+        }
+    }
+
+    private func updateMenuBarPresentation(
+        _ update: (inout MenuBarPresentation) -> Void
+    ) {
+        update(&menuBarPresentation)
+        let menuBarPresentation = self.menuBarPresentation
+
+        Task {
+            await settingsStore.set(menuBarPresentation, for: .menuBarPresentation)
         }
     }
 

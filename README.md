@@ -42,6 +42,7 @@
 This repository currently contains a working MVP foundation:
 
 - macOS app shell with menu bar controller and popover host
+- customizable menu bar indicators for CPU, memory, network, disk, and battery
 - live CPU, per-core CPU, memory, disk, network, battery, and running app metrics
 - live history window with recent raw samples and 24-hour minute-level aggregates
 - configurable local alerts for CPU, memory, battery, and disk activity
