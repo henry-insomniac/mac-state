@@ -92,32 +92,28 @@ final class StatusItemController: NSObject {
     private var reservedTitleWidth: CGFloat {
         let sampleText: String
 
-        switch appState.menuBarPresentation.textMode {
+        switch appState.menuBarPresentation.textMode.normalized {
         case .iconOnly:
             return 0
         case .appName:
             sampleText = appState.text(.appTitle)
         case .selectedMetric:
             sampleText = reservedMetricSampleText
+        case .selectedMetrics:
+            sampleText = reservedSelectedMetricsSampleText
         case .twoMetrics:
-            sampleText = reservedDualMetricSampleText
+            sampleText = reservedSelectedMetricsSampleText
         }
 
         return ceil((sampleText as NSString).size(withAttributes: [.font: titleFont]).width)
     }
 
-    private var reservedDualMetricSampleText: String {
-        let primaryLabel = appState.menuBarPrimaryMetricCompactTitle(appState.menuBarPresentation.primaryMetric)
-        let primaryValue = reservedSampleValue(for: appState.menuBarPresentation.primaryMetric)
-        let secondaryMetric = appState.menuBarPresentation.secondaryMetric == appState.menuBarPresentation.primaryMetric
-            ? nil
-            : appState.menuBarPresentation.secondaryMetric
-        let resolvedSecondaryMetric = secondaryMetric ?? MenuBarPrimaryMetric.allCases.first(where: {
-            $0 != appState.menuBarPresentation.primaryMetric
-        }) ?? .memoryUsage
-        let secondaryLabel = appState.menuBarPrimaryMetricCompactTitle(resolvedSecondaryMetric)
-        let secondaryValue = reservedSampleValue(for: resolvedSecondaryMetric)
-        return "\(primaryLabel) \(primaryValue) · \(secondaryLabel) \(secondaryValue)"
+    private var reservedSelectedMetricsSampleText: String {
+        appState.menuBarSelectedMetrics.map { metric in
+            let label = appState.menuBarPrimaryMetricCompactTitle(metric)
+            let value = reservedSampleValue(for: metric)
+            return "\(label) \(value)"
+        }.joined(separator: " · ")
     }
 
     private var reservedMetricSampleText: String {

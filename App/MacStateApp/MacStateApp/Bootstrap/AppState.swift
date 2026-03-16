@@ -4,6 +4,10 @@ import MacStateFoundation
 import MacStateMetrics
 import MacStateStorage
 
+private enum MenuBarSelectionPolicy {
+    static let maximumMetricCount = 3
+}
+
 @MainActor
 final class AppState: ObservableObject {
     struct RecentAlert: Identifiable, Equatable {
@@ -94,48 +98,82 @@ final class AppState: ObservableObject {
         value.localizedCompactTitle(language: appLanguage)
     }
 
+    var menuBarSelectedMetrics: [MenuBarPrimaryMetric] {
+        resolvedMenuBarMetrics(for: menuBarPresentation)
+    }
+
+    var menuBarSelectedMetricsDetailText: String {
+        let selectionCount = menuBarSelectedMetrics.count
+
+        switch resolvedLanguage {
+        case .simplifiedChinese:
+            return "已选 \(selectionCount)/\(MenuBarSelectionPolicy.maximumMetricCount) 项。排在最前的指标会决定菜单栏图标。"
+        case .english, .system:
+            return "\(selectionCount) of \(MenuBarSelectionPolicy.maximumMetricCount) selected. The first metric controls the menu bar icon."
+        }
+    }
+
+    func isMenuBarMetricSelected(_ value: MenuBarPrimaryMetric) -> Bool {
+        menuBarSelectedMetrics.contains(value)
+    }
+
+    func canSelectMenuBarMetric(_ value: MenuBarPrimaryMetric) -> Bool {
+        isMenuBarMetricSelected(value) || menuBarSelectedMetrics.count < MenuBarSelectionPolicy.maximumMetricCount
+    }
+
+    func menuBarMetricSelectionOrderText(for value: MenuBarPrimaryMetric) -> String? {
+        guard let index = menuBarSelectedMetrics.firstIndex(of: value) else {
+            return nil
+        }
+
+        return "\(index + 1)"
+    }
+
     var menuBarTitle: String {
-        switch menuBarPresentation.textMode {
+        switch menuBarPresentation.textMode.normalized {
         case .iconOnly:
             return ""
         case .appName:
             return text(.appTitle)
         case .selectedMetric:
             return menuBarMetricText(for: menuBarPresentation.primaryMetric)
+        case .selectedMetrics:
+            return menuBarSelectedMetrics.map { metric in
+                "\(menuBarPrimaryMetricCompactTitle(metric)) \(menuBarMetricText(for: metric))"
+            }.joined(separator: " · ")
         case .twoMetrics:
-            let secondaryMetric = resolvedSecondaryMenuBarMetric
-            return "\(menuBarPrimaryMetricCompactTitle(menuBarPresentation.primaryMetric)) \(menuBarMetricText(for: menuBarPresentation.primaryMetric)) · \(menuBarPrimaryMetricCompactTitle(secondaryMetric)) \(menuBarMetricText(for: secondaryMetric))"
+            return ""
         }
     }
 
     var menuBarSymbolName: String {
-        menuBarPresentation.primaryMetric.symbolName
+        menuBarSelectedMetrics.first?.symbolName ?? menuBarPresentation.primaryMetric.symbolName
     }
 
     var menuBarAccessibilityLabel: String {
         let primaryMetricTitle = menuBarPrimaryMetricTitle(menuBarPresentation.primaryMetric)
         let primaryMetricText = menuBarMetricText(for: menuBarPresentation.primaryMetric)
 
-        if menuBarPresentation.textMode == .appName {
+        if menuBarPresentation.textMode.normalized == .appName {
             return "\(text(.appTitle)), \(primaryMetricTitle) \(primaryMetricText)"
         }
 
-        if menuBarPresentation.textMode == .iconOnly {
+        if menuBarPresentation.textMode.normalized == .iconOnly {
             return "\(primaryMetricTitle) \(primaryMetricText)"
         }
 
-        if menuBarPresentation.textMode == .twoMetrics {
-            let secondaryMetric = resolvedSecondaryMenuBarMetric
-            let secondaryTitle = menuBarPrimaryMetricTitle(secondaryMetric)
-            let secondaryText = menuBarMetricText(for: secondaryMetric)
-            return "\(text(.appTitle)), \(primaryMetricTitle) \(primaryMetricText), \(secondaryTitle) \(secondaryText)"
+        if menuBarPresentation.textMode.normalized == .selectedMetrics {
+            let components = menuBarSelectedMetrics.map { metric in
+                "\(menuBarPrimaryMetricTitle(metric)) \(menuBarMetricText(for: metric))"
+            }
+            return "\(text(.appTitle)), \(components.joined(separator: ", "))"
         }
 
         return "\(text(.appTitle)) \(primaryMetricText)"
     }
 
     var menuBarSettingsSummaryText: String {
-        switch menuBarPresentation.textMode {
+        switch menuBarPresentation.textMode.normalized {
         case .selectedMetric:
             switch resolvedLanguage {
             case .simplifiedChinese:
@@ -143,13 +181,13 @@ final class AppState: ObservableObject {
             case .english, .system:
                 return "The menu bar shows \(menuBarPrimaryMetricTitle(menuBarPresentation.primaryMetric).lowercased()) as live text."
             }
-        case .twoMetrics:
-            let secondaryMetric = resolvedSecondaryMenuBarMetric
+        case .selectedMetrics:
+            let selectedMetrics = localizedMenuBarMetricList(from: menuBarSelectedMetrics)
             switch resolvedLanguage {
             case .simplifiedChinese:
-                return "菜单栏会同时显示\(menuBarPrimaryMetricTitle(menuBarPresentation.primaryMetric))和\(menuBarPrimaryMetricTitle(secondaryMetric))。"
+                return "菜单栏会同时显示\(selectedMetrics)，最多 \(MenuBarSelectionPolicy.maximumMetricCount) 项。"
             case .english, .system:
-                return "The menu bar shows \(menuBarPrimaryMetricTitle(menuBarPresentation.primaryMetric).lowercased()) and \(menuBarPrimaryMetricTitle(secondaryMetric).lowercased()) together."
+                return "The menu bar can show up to \(MenuBarSelectionPolicy.maximumMetricCount) live metrics together. Current selection: \(selectedMetrics)."
             }
         case .appName:
             switch resolvedLanguage {
@@ -165,19 +203,23 @@ final class AppState: ObservableObject {
             case .english, .system:
                 return "The menu bar stays icon-only and keeps the selected metric ready for future text mode."
             }
+        case .twoMetrics:
+            return ""
         }
     }
 
     var menuBarPreviewText: String {
-        switch menuBarPresentation.textMode {
+        switch menuBarPresentation.textMode.normalized {
         case .selectedMetric:
             return menuBarMetricText(for: menuBarPresentation.primaryMetric)
-        case .twoMetrics:
+        case .selectedMetrics:
             return menuBarTitle
         case .appName:
             return text(.appTitle)
         case .iconOnly:
             return menuBarTextModeTitle(.iconOnly)
+        case .twoMetrics:
+            return ""
         }
     }
 
@@ -186,9 +228,10 @@ final class AppState: ObservableObject {
     }
 
     var menuBarMetricTitle: String {
-        if menuBarPresentation.textMode == .twoMetrics {
-            let secondaryMetric = resolvedSecondaryMenuBarMetric
-            return "\(menuBarPrimaryMetricTitle(menuBarPresentation.primaryMetric)) · \(menuBarPrimaryMetricTitle(secondaryMetric))"
+        if menuBarPresentation.textMode.normalized == .selectedMetrics {
+            return menuBarSelectedMetrics
+                .map(menuBarPrimaryMetricTitle)
+                .joined(separator: " · ")
         }
 
         return menuBarPrimaryMetricTitle(menuBarPresentation.primaryMetric)
@@ -619,7 +662,8 @@ final class AppState: ObservableObject {
 
         if menuBarPresentation.textMode == .selectedMetric,
            menuBarPresentation.primaryMetric == .cpuUsage,
-           menuBarPresentation.secondaryMetric == nil {
+           menuBarPresentation.secondaryMetric == nil,
+           menuBarPresentation.tertiaryMetric == nil {
             menuBarPresentation = .default
             let menuBarPresentation = self.menuBarPresentation
             Task {
@@ -643,10 +687,7 @@ final class AppState: ObservableObject {
 
     func setMenuBarTextMode(_ value: MenuBarTextMode) {
         updateMenuBarPresentation { presentation in
-            presentation.textMode = value
-            if value == .twoMetrics {
-                presentation.secondaryMetric = resolvedSecondaryMetric(for: presentation)
-            }
+            presentation.textMode = value.normalized
         }
     }
 
@@ -660,18 +701,36 @@ final class AppState: ObservableObject {
 
     func setMenuBarPrimaryMetric(_ value: MenuBarPrimaryMetric) {
         updateMenuBarPresentation { presentation in
-            presentation.primaryMetric = value
-            if presentation.textMode == .twoMetrics {
-                presentation.secondaryMetric = resolvedSecondaryMetric(for: presentation)
-            }
+            var metrics = resolvedMenuBarMetrics(for: presentation)
+            metrics.removeAll { $0 == value }
+            metrics.insert(value, at: 0)
+            assignMenuBarMetrics(metrics, to: &presentation)
         }
     }
 
-    func setMenuBarSecondaryMetric(_ value: MenuBarPrimaryMetric) {
+    func setMenuBarMetricSelected(
+        _ value: MenuBarPrimaryMetric,
+        isSelected: Bool
+    ) {
         updateMenuBarPresentation { presentation in
-            presentation.secondaryMetric = value == presentation.primaryMetric
-                ? fallbackSecondaryMetric(excluding: presentation.primaryMetric)
-                : value
+            var metrics = resolvedMenuBarMetrics(for: presentation)
+
+            if isSelected {
+                guard metrics.contains(value) == false,
+                      metrics.count < MenuBarSelectionPolicy.maximumMetricCount else {
+                    return
+                }
+
+                metrics.append(value)
+            } else {
+                guard metrics.count > 1 else {
+                    return
+                }
+
+                metrics.removeAll { $0 == value }
+            }
+
+            assignMenuBarMetrics(metrics, to: &presentation)
         }
     }
 
@@ -810,10 +869,6 @@ final class AppState: ObservableObject {
         return "\(percentage)%"
     }
 
-    private var resolvedSecondaryMenuBarMetric: MenuBarPrimaryMetric {
-        resolvedSecondaryMetric(for: menuBarPresentation)
-    }
-
     private func menuBarMetricText(for metric: MenuBarPrimaryMetric) -> String {
         switch metric {
         case .cpuUsage:
@@ -831,27 +886,51 @@ final class AppState: ObservableObject {
         }
     }
 
-    private func resolvedSecondaryMetric(
+    private func resolvedMenuBarMetrics(
         for presentation: MenuBarPresentation
-    ) -> MenuBarPrimaryMetric {
-        if let secondaryMetric = presentation.secondaryMetric,
-           secondaryMetric != presentation.primaryMetric {
-            return secondaryMetric
+    ) -> [MenuBarPrimaryMetric] {
+        let metrics = [
+            presentation.primaryMetric,
+            presentation.secondaryMetric,
+            presentation.tertiaryMetric,
+        ].compactMap { $0 }
+
+        let uniqueMetrics = metrics.reduce(into: [MenuBarPrimaryMetric]()) { partialResult, metric in
+            if partialResult.contains(metric) == false {
+                partialResult.append(metric)
+            }
         }
 
-        return fallbackSecondaryMetric(excluding: presentation.primaryMetric)
+        let normalizedMetrics = uniqueMetrics.isEmpty
+            ? [presentation.primaryMetric]
+            : uniqueMetrics
+
+        return Array(normalizedMetrics.prefix(MenuBarSelectionPolicy.maximumMetricCount))
     }
 
-    private func fallbackSecondaryMetric(
-        excluding primaryMetric: MenuBarPrimaryMetric
-    ) -> MenuBarPrimaryMetric {
-        MenuBarPrimaryMetric.allCases.first(where: { $0 != primaryMetric }) ?? .memoryUsage
+    private func assignMenuBarMetrics(
+        _ metrics: [MenuBarPrimaryMetric],
+        to presentation: inout MenuBarPresentation
+    ) {
+        let normalizedMetrics = Array(
+            (metrics.isEmpty ? [presentation.primaryMetric] : metrics)
+                .prefix(MenuBarSelectionPolicy.maximumMetricCount)
+        )
+
+        presentation.primaryMetric = normalizedMetrics.first ?? .cpuUsage
+        presentation.secondaryMetric = normalizedMetrics.count > 1 ? normalizedMetrics[1] : nil
+        presentation.tertiaryMetric = normalizedMetrics.count > 2 ? normalizedMetrics[2] : nil
+    }
+
+    private func localizedMenuBarMetricList(from metrics: [MenuBarPrimaryMetric]) -> String {
+        let separator = resolvedLanguage == .simplifiedChinese ? "、" : ", "
+        return metrics.map(menuBarPrimaryMetricTitle).joined(separator: separator)
     }
 
     private func normalizeMenuBarPresentation() {
-        if menuBarPresentation.textMode == .twoMetrics {
-            menuBarPresentation.secondaryMetric = resolvedSecondaryMetric(for: menuBarPresentation)
-        }
+        menuBarPresentation.textMode = menuBarPresentation.textMode.normalized
+        let metrics = resolvedMenuBarMetrics(for: menuBarPresentation)
+        assignMenuBarMetrics(metrics, to: &menuBarPresentation)
     }
 
     func historySummaryText(for samples: [MetricHistorySample]) -> String {
@@ -891,6 +970,7 @@ final class AppState: ObservableObject {
         _ update: (inout MenuBarPresentation) -> Void
     ) {
         update(&menuBarPresentation)
+        normalizeMenuBarPresentation()
         let menuBarPresentation = self.menuBarPresentation
 
         Task {

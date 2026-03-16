@@ -178,7 +178,7 @@ struct SettingsView: View {
                                     Picker(
                                         appState.text(.menuBarText),
                                         selection: Binding(
-                                            get: { appState.menuBarPresentation.textMode },
+                                            get: { appState.menuBarPresentation.textMode.normalized },
                                             set: { appState.setMenuBarTextMode($0) }
                                         )
                                     ) {
@@ -190,48 +190,77 @@ struct SettingsView: View {
                                     .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
                                 }
 
-                                SettingsControlRow(title: appState.text(.primaryMetric)) {
-                                    Picker(
-                                        appState.text(.primaryMetric),
-                                        selection: Binding(
-                                            get: { appState.menuBarPresentation.primaryMetric },
-                                            set: { appState.setMenuBarPrimaryMetric($0) }
-                                        )
-                                    ) {
-                                        ForEach(MenuBarPrimaryMetric.allCases, id: \.self) { metric in
-                                            Text(appState.menuBarPrimaryMetricTitle(metric)).tag(metric)
-                                        }
-                                    }
-                                    .labelsHidden()
-                                    .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
-                                }
-
-                                if appState.menuBarPresentation.textMode == .twoMetrics {
-                                    SettingsControlRow(title: appState.text(.secondaryMetric)) {
+                                if appState.menuBarPresentation.textMode.normalized == .selectedMetric {
+                                    SettingsControlRow(title: appState.text(.primaryMetric)) {
                                         Picker(
-                                            appState.text(.secondaryMetric),
+                                            appState.text(.primaryMetric),
                                             selection: Binding(
-                                                get: {
-                                                    appState.menuBarPresentation.secondaryMetric
-                                                        ?? MenuBarPrimaryMetric.allCases.first(where: {
-                                                            $0 != appState.menuBarPresentation.primaryMetric
-                                                        })
-                                                        ?? .memoryUsage
-                                                },
-                                                set: { appState.setMenuBarSecondaryMetric($0) }
+                                                get: { appState.menuBarPresentation.primaryMetric },
+                                                set: { appState.setMenuBarPrimaryMetric($0) }
                                             )
                                         ) {
-                                            ForEach(
-                                                MenuBarPrimaryMetric.allCases.filter {
-                                                    $0 != appState.menuBarPresentation.primaryMetric
-                                                },
-                                                id: \.self
-                                            ) { metric in
+                                            ForEach(MenuBarPrimaryMetric.allCases, id: \.self) { metric in
                                                 Text(appState.menuBarPrimaryMetricTitle(metric)).tag(metric)
                                             }
                                         }
                                         .labelsHidden()
                                         .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
+                                    }
+                                }
+
+                                if appState.menuBarPresentation.textMode.normalized == .selectedMetrics {
+                                    SettingsControlRow(
+                                        title: appState.text(.selectedMetrics),
+                                        detail: appState.menuBarSelectedMetricsDetailText
+                                    ) {
+                                        VStack(alignment: .leading, spacing: 8) {
+                                            ForEach(MenuBarPrimaryMetric.allCases, id: \.self) { metric in
+                                                let isSelected = appState.isMenuBarMetricSelected(metric)
+                                                let canSelectMetric = appState.canSelectMenuBarMetric(metric)
+
+                                                Button {
+                                                    appState.setMenuBarMetricSelected(metric, isSelected: isSelected == false)
+                                                } label: {
+                                                    HStack(spacing: 12) {
+                                                        Image(systemName: isSelected ? "checkmark.square.fill" : "square")
+                                                            .imageScale(.medium)
+
+                                                        Text(appState.menuBarPrimaryMetricTitle(metric))
+                                                            .font(.subheadline)
+                                                            .multilineTextAlignment(.leading)
+
+                                                        Spacer(minLength: 12)
+
+                                                        if let selectionOrder = appState.menuBarMetricSelectionOrderText(for: metric) {
+                                                            Text(selectionOrder)
+                                                                .font(.caption)
+                                                                .bold()
+                                                                .frame(width: 22, height: 22)
+                                                                .background(
+                                                                    RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                                                        .fill(Color.primary.opacity(0.08))
+                                                                )
+                                                                .clipShape(.rect(cornerRadius: 11))
+                                                        }
+                                                    }
+                                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                                    .padding(.horizontal, 12)
+                                                    .padding(.vertical, 10)
+                                                    .background(
+                                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                            .fill(Color.primary.opacity(isSelected ? 0.08 : 0.03))
+                                                    )
+                                                    .overlay(
+                                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                            .strokeBorder(Color.primary.opacity(isSelected ? 0.16 : 0.06), lineWidth: 1)
+                                                    )
+                                                }
+                                                .buttonStyle(.plain)
+                                                .disabled(canSelectMetric == false)
+                                                .opacity(canSelectMetric || isSelected ? 1 : 0.45)
+                                            }
+                                        }
+                                        .frame(width: SettingsLayout.valueColumnWidth, alignment: .trailing)
                                     }
                                 }
 

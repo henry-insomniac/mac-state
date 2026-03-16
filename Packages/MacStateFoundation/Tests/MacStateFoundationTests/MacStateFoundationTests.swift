@@ -41,9 +41,10 @@ import Foundation
 @Test func menuBarPresentationDefaultsMatchAppPolicy() {
     let presentation = MenuBarPresentation.default
 
-    #expect(presentation.textMode == .twoMetrics)
+    #expect(presentation.textMode == .selectedMetrics)
     #expect(presentation.primaryMetric == .cpuUsage)
     #expect(presentation.secondaryMetric == .memoryUsage)
+    #expect(presentation.tertiaryMetric == .networkDownload)
 }
 
 @Test func sharedWidgetSnapshotStoreRoundTripsSnapshot() {
@@ -60,7 +61,8 @@ import Foundation
 
 @Test func menuBarPresentationTitlesCanBeLocalized() {
     #expect(MenuBarTextMode.iconOnly.localizedTitle(language: .simplifiedChinese) == "仅图标")
-    #expect(MenuBarTextMode.twoMetrics.localizedTitle(language: .english) == "Two Metrics")
+    #expect(MenuBarTextMode.selectedMetrics.localizedTitle(language: .english) == "Up to 3 Metrics")
+    #expect(MenuBarTextMode.twoMetrics.localizedTitle(language: .english) == "Up to 3 Metrics")
     #expect(MenuBarPrimaryMetric.diskActivity.localizedTitle(language: .simplifiedChinese) == "磁盘活动")
     #expect(MenuBarPrimaryMetric.memoryUsage.localizedCompactTitle(language: .english) == "MEM")
 }

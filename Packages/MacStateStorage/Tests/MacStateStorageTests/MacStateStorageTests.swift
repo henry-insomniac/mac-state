@@ -141,9 +141,10 @@ import MacStateMetrics
     defaults.removePersistentDomain(forName: #function)
     let store = SettingsStore(defaults: defaults)
     let presentation = MenuBarPresentation(
-        textMode: .iconOnly,
+        textMode: .selectedMetrics,
         primaryMetric: .networkDownload,
-        secondaryMetric: .memoryUsage
+        secondaryMetric: .memoryUsage,
+        tertiaryMetric: .diskActivity
     )
 
     await store.set(presentation, for: .menuBarPresentation)

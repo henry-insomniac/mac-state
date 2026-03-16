@@ -1,33 +1,52 @@
 import Foundation
 
-public enum MenuBarTextMode: String, CaseIterable, Codable, Sendable, Equatable {
+public enum MenuBarTextMode: String, Codable, Sendable, Equatable {
     case selectedMetric
     case twoMetrics
+    case selectedMetrics
     case appName
     case iconOnly
 
+    public static var allCases: [Self] {
+        [
+            .selectedMetric,
+            .selectedMetrics,
+            .appName,
+            .iconOnly,
+        ]
+    }
+
+    public var normalized: Self {
+        switch self {
+        case .twoMetrics:
+            return .selectedMetrics
+        case .selectedMetric, .selectedMetrics, .appName, .iconOnly:
+            return self
+        }
+    }
+
     public func localizedTitle(language: AppLanguage) -> String {
-        switch (language.resolvedLanguage, self) {
+        switch (language.resolvedLanguage, normalized) {
         case (.system, .selectedMetric):
             return "Selected Metric"
-        case (.system, .twoMetrics):
-            return "Two Metrics"
+        case (.system, .twoMetrics), (.system, .selectedMetrics):
+            return "Up to 3 Metrics"
         case (.system, .appName):
             return "App Name"
         case (.system, .iconOnly):
             return "Icon Only"
         case (.simplifiedChinese, .selectedMetric):
             return "所选指标"
-        case (.simplifiedChinese, .twoMetrics):
-            return "双指标"
+        case (.simplifiedChinese, .twoMetrics), (.simplifiedChinese, .selectedMetrics):
+            return "多指标（最多 3 项）"
         case (.simplifiedChinese, .appName):
             return "应用名称"
         case (.simplifiedChinese, .iconOnly):
             return "仅图标"
         case (.english, .selectedMetric):
             return "Selected Metric"
-        case (.english, .twoMetrics):
-            return "Two Metrics"
+        case (.english, .twoMetrics), (.english, .selectedMetrics):
+            return "Up to 3 Metrics"
         case (.english, .appName):
             return "App Name"
         case (.english, .iconOnly):
@@ -136,20 +155,24 @@ public struct MenuBarPresentation: Codable, Sendable, Equatable {
     public var textMode: MenuBarTextMode
     public var primaryMetric: MenuBarPrimaryMetric
     public var secondaryMetric: MenuBarPrimaryMetric?
+    public var tertiaryMetric: MenuBarPrimaryMetric?
 
     public init(
         textMode: MenuBarTextMode,
         primaryMetric: MenuBarPrimaryMetric,
-        secondaryMetric: MenuBarPrimaryMetric? = nil
+        secondaryMetric: MenuBarPrimaryMetric? = nil,
+        tertiaryMetric: MenuBarPrimaryMetric? = nil
     ) {
-        self.textMode = textMode
+        self.textMode = textMode.normalized
         self.primaryMetric = primaryMetric
         self.secondaryMetric = secondaryMetric
+        self.tertiaryMetric = tertiaryMetric
     }
 
     public static let `default` = MenuBarPresentation(
-        textMode: .twoMetrics,
+        textMode: .selectedMetrics,
         primaryMetric: .cpuUsage,
-        secondaryMetric: .memoryUsage
+        secondaryMetric: .memoryUsage,
+        tertiaryMetric: .networkDownload
     )
 }
