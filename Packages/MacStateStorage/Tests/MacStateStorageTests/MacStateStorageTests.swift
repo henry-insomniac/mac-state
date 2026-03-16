@@ -142,7 +142,8 @@ import MacStateMetrics
     let store = SettingsStore(defaults: defaults)
     let presentation = MenuBarPresentation(
         textMode: .iconOnly,
-        primaryMetric: .networkDownload
+        primaryMetric: .networkDownload,
+        secondaryMetric: .memoryUsage
     )
 
     await store.set(presentation, for: .menuBarPresentation)

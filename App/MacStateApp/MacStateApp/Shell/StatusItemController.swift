@@ -1,5 +1,6 @@
 import AppKit
 import Combine
+import MacStateFoundation
 
 @MainActor
 final class StatusItemController: NSObject {
@@ -98,13 +99,33 @@ final class StatusItemController: NSObject {
             sampleText = appState.text(.appTitle)
         case .selectedMetric:
             sampleText = reservedMetricSampleText
+        case .twoMetrics:
+            sampleText = reservedDualMetricSampleText
         }
 
         return ceil((sampleText as NSString).size(withAttributes: [.font: titleFont]).width)
     }
 
+    private var reservedDualMetricSampleText: String {
+        let primaryLabel = appState.menuBarPrimaryMetricCompactTitle(appState.menuBarPresentation.primaryMetric)
+        let primaryValue = reservedSampleValue(for: appState.menuBarPresentation.primaryMetric)
+        let secondaryMetric = appState.menuBarPresentation.secondaryMetric == appState.menuBarPresentation.primaryMetric
+            ? nil
+            : appState.menuBarPresentation.secondaryMetric
+        let resolvedSecondaryMetric = secondaryMetric ?? MenuBarPrimaryMetric.allCases.first(where: {
+            $0 != appState.menuBarPresentation.primaryMetric
+        }) ?? .memoryUsage
+        let secondaryLabel = appState.menuBarPrimaryMetricCompactTitle(resolvedSecondaryMetric)
+        let secondaryValue = reservedSampleValue(for: resolvedSecondaryMetric)
+        return "\(primaryLabel) \(primaryValue) · \(secondaryLabel) \(secondaryValue)"
+    }
+
     private var reservedMetricSampleText: String {
-        switch appState.menuBarPresentation.primaryMetric {
+        reservedSampleValue(for: appState.menuBarPresentation.primaryMetric)
+    }
+
+    private func reservedSampleValue(for metric: MenuBarPrimaryMetric) -> String {
+        switch metric {
         case .cpuUsage, .memoryUsage, .batteryLevel:
             return "100%"
         case .networkDownload, .networkUpload, .diskActivity:

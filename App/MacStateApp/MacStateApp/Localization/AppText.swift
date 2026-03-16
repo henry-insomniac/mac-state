@@ -56,6 +56,7 @@ enum AppTextKey {
     case menuBar
     case menuBarText
     case primaryMetric
+    case secondaryMetric
     case preview
     case alertWhenCPUUsageHigh
     case cpuThreshold
@@ -219,6 +220,8 @@ enum AppText {
             return "菜单栏文本"
         case (.simplifiedChinese, .primaryMetric):
             return "主指标"
+        case (.simplifiedChinese, .secondaryMetric):
+            return "副指标"
         case (.simplifiedChinese, .preview):
             return "预览"
         case (.simplifiedChinese, .alertWhenCPUUsageHigh):
@@ -416,6 +419,8 @@ enum AppText {
             return "Menu bar text"
         case (.english, .primaryMetric):
             return "Primary metric"
+        case (.english, .secondaryMetric):
+            return "Secondary metric"
         case (.english, .preview):
             return "Preview"
         case (.english, .alertWhenCPUUsageHigh):

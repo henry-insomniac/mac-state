@@ -206,7 +206,36 @@ struct SettingsView: View {
                                     .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
                                 }
 
-                                Text("\(appState.text(.preview)): \(appState.menuBarPreviewText) · \(appState.menuBarMetricTitle)")
+                                if appState.menuBarPresentation.textMode == .twoMetrics {
+                                    SettingsControlRow(title: appState.text(.secondaryMetric)) {
+                                        Picker(
+                                            appState.text(.secondaryMetric),
+                                            selection: Binding(
+                                                get: {
+                                                    appState.menuBarPresentation.secondaryMetric
+                                                        ?? MenuBarPrimaryMetric.allCases.first(where: {
+                                                            $0 != appState.menuBarPresentation.primaryMetric
+                                                        })
+                                                        ?? .memoryUsage
+                                                },
+                                                set: { appState.setMenuBarSecondaryMetric($0) }
+                                            )
+                                        ) {
+                                            ForEach(
+                                                MenuBarPrimaryMetric.allCases.filter {
+                                                    $0 != appState.menuBarPresentation.primaryMetric
+                                                },
+                                                id: \.self
+                                            ) { metric in
+                                                Text(appState.menuBarPrimaryMetricTitle(metric)).tag(metric)
+                                            }
+                                        }
+                                        .labelsHidden()
+                                        .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
+                                    }
+                                }
+
+                                Text("\(appState.text(.preview)): \(appState.menuBarPreviewText)")
                                     .font(.subheadline)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(.horizontal, 12)
