@@ -59,6 +59,8 @@ enum AppTextKey {
     case secondaryMetric
     case selectedMetrics
     case preview
+    case showDetails
+    case hideDetails
     case alertWhenCPUUsageHigh
     case cpuThreshold
     case alertWhenMemoryUsageHigh
@@ -227,6 +229,10 @@ enum AppText {
             return "已选指标"
         case (.simplifiedChinese, .preview):
             return "预览"
+        case (.simplifiedChinese, .showDetails):
+            return "展开详情"
+        case (.simplifiedChinese, .hideDetails):
+            return "收起详情"
         case (.simplifiedChinese, .alertWhenCPUUsageHigh):
             return "当 CPU 使用率过高时告警"
         case (.simplifiedChinese, .cpuThreshold):
@@ -428,6 +434,10 @@ enum AppText {
             return "Selected metrics"
         case (.english, .preview):
             return "Preview"
+        case (.english, .showDetails):
+            return "Show details"
+        case (.english, .hideDetails):
+            return "Hide details"
         case (.english, .alertWhenCPUUsageHigh):
             return "Alert when CPU usage is high"
         case (.english, .cpuThreshold):

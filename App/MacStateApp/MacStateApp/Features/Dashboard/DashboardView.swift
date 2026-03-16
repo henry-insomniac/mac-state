@@ -16,6 +16,11 @@ struct DashboardView: View {
     let refreshMetrics: @MainActor () -> Void
     let openHistory: @MainActor () -> Void
     let openSettings: @MainActor () -> Void
+    @State private var isCPUCoresExpanded = false
+    @State private var isSensorsExpanded = false
+    @State private var isAlertsExpanded = false
+    @State private var isTrendsExpanded = false
+    @State private var isRunningAppsExpanded = false
 
     var body: some View {
         ScrollView(.vertical) {
@@ -38,37 +43,44 @@ struct DashboardView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                MetricCard(appState.text(.cpuCores)) {
+                CollapsibleMetricCard(
+                    appState.text(.cpuCores),
+                    isExpanded: $isCPUCoresExpanded,
+                    expandAccessibilityLabel: appState.text(.showDetails),
+                    collapseAccessibilityLabel: appState.text(.hideDetails)
+                ) {
                     Text(appState.cpuCoreCountText)
                         .foregroundColor(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
+                } details: {
+                    VStack(alignment: .leading, spacing: 12) {
+                        TrendStrip(values: appState.cpuCoreTrendValues, tint: .orange)
 
-                    TrendStrip(values: appState.cpuCoreTrendValues, tint: .orange)
+                        LazyVGrid(
+                            columns: [
+                                GridItem(
+                                    .adaptive(minimum: DashboardLayout.coreCardMinimumWidth),
+                                    alignment: .top
+                                ),
+                            ],
+                            alignment: .leading,
+                            spacing: DashboardLayout.coreGridSpacing
+                        ) {
+                            ForEach(appState.cpuCores) { core in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("\(appState.text(.cpu)) \(core.index + 1)")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(1)
 
-                    LazyVGrid(
-                        columns: [
-                            GridItem(
-                                .adaptive(minimum: DashboardLayout.coreCardMinimumWidth),
-                                alignment: .top
-                            ),
-                        ],
-                        alignment: .leading,
-                        spacing: DashboardLayout.coreGridSpacing
-                    ) {
-                        ForEach(appState.cpuCores) { core in
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("\(appState.text(.cpu)) \(core.index + 1)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .lineLimit(1)
+                                    Text(appState.cpuCoreUsageText(for: core))
+                                        .bold()
 
-                                Text(appState.cpuCoreUsageText(for: core))
-                                    .bold()
-
-                                ProgressView(value: core.usage)
-                                    .frame(maxWidth: .infinity)
+                                    ProgressView(value: core.usage)
+                                        .frame(maxWidth: .infinity)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
-                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
                 }
@@ -107,83 +119,92 @@ struct DashboardView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                MetricCard(appState.text(.sensors)) {
-                    Text(appState.thermalConditionText)
-                        .font(.title3)
-                        .bold()
+                CollapsibleMetricCard(
+                    appState.text(.sensors),
+                    isExpanded: $isSensorsExpanded,
+                    expandAccessibilityLabel: appState.text(.showDetails),
+                    collapseAccessibilityLabel: appState.text(.hideDetails)
+                ) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(appState.thermalConditionText)
+                            .font(.title3)
+                            .bold()
 
-                    Text(appState.thermalConditionDetailText)
-                        .foregroundColor(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Text(appState.sensorSourceText)
-                        .foregroundColor(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(alignment: .firstTextBaseline) {
-                            Text(appState.text(.cpuLabel))
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-
-                            Spacer()
-
-                            Text(appState.cpuTemperatureText)
-                                .bold()
-                        }
-
-                        HStack(alignment: .firstTextBaseline) {
-                            Text(appState.text(.gpuLabel))
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-
-                            Spacer()
-
-                            Text(appState.gpuTemperatureText)
-                                .bold()
-                        }
-
-                        HStack(alignment: .firstTextBaseline) {
-                            Text(appState.text(.batteryLabel))
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-
-                            Spacer()
-
-                            Text(appState.batteryTemperatureText)
-                                .bold()
-                        }
+                        Text(appState.sensorSourceText)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
+                } details: {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(appState.thermalConditionDetailText)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
 
-                    Text(appState.fanStatusText)
-                        .foregroundColor(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    if appState.sensors.fans.isEmpty == false {
                         VStack(alignment: .leading, spacing: 8) {
-                            ForEach(appState.sensors.fans) { fan in
-                                HStack(alignment: .firstTextBaseline) {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(appState.resolvedLanguage == .simplifiedChinese ? "风扇 \(fan.index + 1)" : "Fan \(fan.index + 1)")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
+                            HStack(alignment: .firstTextBaseline) {
+                                Text(appState.text(.cpuLabel))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
 
-                                        Text(appState.fanRangeText(for: fan))
-                                            .foregroundColor(.secondary)
+                                Spacer()
+
+                                Text(appState.cpuTemperatureText)
+                                    .bold()
+                            }
+
+                            HStack(alignment: .firstTextBaseline) {
+                                Text(appState.text(.gpuLabel))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+
+                                Spacer()
+
+                                Text(appState.gpuTemperatureText)
+                                    .bold()
+                            }
+
+                            HStack(alignment: .firstTextBaseline) {
+                                Text(appState.text(.batteryLabel))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+
+                                Spacer()
+
+                                Text(appState.batteryTemperatureText)
+                                    .bold()
+                            }
+                        }
+
+                        Text(appState.fanStatusText)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        if appState.sensors.fans.isEmpty == false {
+                            VStack(alignment: .leading, spacing: 8) {
+                                ForEach(appState.sensors.fans) { fan in
+                                    HStack(alignment: .firstTextBaseline) {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(appState.resolvedLanguage == .simplifiedChinese ? "风扇 \(fan.index + 1)" : "Fan \(fan.index + 1)")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+
+                                            Text(appState.fanRangeText(for: fan))
+                                                .foregroundColor(.secondary)
+                                        }
+
+                                        Spacer()
+
+                                        Text(appState.fanSpeedText(for: fan))
+                                            .bold()
                                     }
-
-                                    Spacer()
-
-                                    Text(appState.fanSpeedText(for: fan))
-                                        .bold()
                                 }
                             }
                         }
-                    }
 
-                    Text(appState.sensorAvailabilityText)
-                        .foregroundColor(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                        Text(appState.sensorAvailabilityText)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
 
                 MetricCard(appState.text(.network)) {
@@ -201,19 +222,26 @@ struct DashboardView: View {
                     }
                 }
 
-                MetricCard(appState.text(.alerts)) {
-                    Text(appState.alertsStatusText)
-                        .font(.headline)
-                        .fixedSize(horizontal: false, vertical: true)
+                CollapsibleMetricCard(
+                    appState.text(.alerts),
+                    isExpanded: $isAlertsExpanded,
+                    expandAccessibilityLabel: appState.text(.showDetails),
+                    collapseAccessibilityLabel: appState.text(.hideDetails)
+                ) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(appState.alertsStatusText)
+                            .font(.headline)
+                            .fixedSize(horizontal: false, vertical: true)
 
-                    Text(appState.alertsSummaryText)
-                        .foregroundColor(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                        Text(appState.alertsSummaryText)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
 
-                    Text(appState.recentAlertsText)
-                        .foregroundColor(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-
+                        Text(appState.recentAlertsText)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                } details: {
                     if appState.recentAlerts.isEmpty == false {
                         VStack(alignment: .leading, spacing: 10) {
                             ForEach(Array(appState.recentAlerts.prefix(4))) { alert in
@@ -238,11 +266,16 @@ struct DashboardView: View {
                     }
                 }
 
-                MetricCard(appState.text(.trends)) {
+                CollapsibleMetricCard(
+                    appState.text(.trends),
+                    isExpanded: $isTrendsExpanded,
+                    expandAccessibilityLabel: appState.text(.showDetails),
+                    collapseAccessibilityLabel: appState.text(.hideDetails)
+                ) {
                     Text(appState.historySummaryText)
                         .foregroundColor(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
-
+                } details: {
                     VStack(alignment: .leading, spacing: 12) {
                         Text(appState.text(.cpu))
                             .font(.subheadline)
@@ -271,12 +304,17 @@ struct DashboardView: View {
                     }
                 }
 
-                MetricCard(appState.text(.runningApps)) {
+                CollapsibleMetricCard(
+                    appState.text(.runningApps),
+                    isExpanded: $isRunningAppsExpanded,
+                    expandAccessibilityLabel: appState.text(.showDetails),
+                    collapseAccessibilityLabel: appState.text(.hideDetails)
+                ) {
                     Text(appState.runningAppsText)
                         .font(.title3)
                         .bold()
                         .fixedSize(horizontal: false, vertical: true)
-
+                } details: {
                     if appState.processes.isEmpty {
                         Text(appState.text(.visibleAppsAfterScan))
                             .foregroundColor(.secondary)
