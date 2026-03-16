@@ -22,6 +22,7 @@
 		A10000000000000000000096 /* AppText.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000097 /* AppText.swift */; };
 		A10000000000000000000099 /* SettingsSectionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000009A /* SettingsSectionCard.swift */; };
 		A1000000000000000000009B /* SettingsControlRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000009C /* SettingsControlRow.swift */; };
+		A100000000000000000000A0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A100000000000000000000A1 /* Assets.xcassets */; };
 		A10000000000000000000040 /* MacStateFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000060 /* MacStateFoundation */; };
 		A10000000000000000000041 /* MacStateMetrics in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000061 /* MacStateMetrics */; };
 		A10000000000000000000042 /* MacStateStorage in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000062 /* MacStateStorage */; };
@@ -67,6 +68,7 @@
 		A10000000000000000000097 /* AppText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppText.swift; sourceTree = "<group>"; };
 		A1000000000000000000009A /* SettingsSectionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSectionCard.swift; sourceTree = "<group>"; };
 		A1000000000000000000009C /* SettingsControlRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsControlRow.swift; sourceTree = "<group>"; };
+		A100000000000000000000A1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A10000000000000000000072 /* MacStateLoginHelper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacStateLoginHelper.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000000000000000000073 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		A10000000000000000000081 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
@@ -130,6 +132,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000000000000000000005 /* App */,
+				A100000000000000000000A1 /* Assets.xcassets */,
 				A10000000000000000000006 /* Bootstrap */,
 				A10000000000000000000098 /* Localization */,
 				A10000000000000000000007 /* Shell */,
@@ -358,6 +361,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A100000000000000000000A0 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -546,6 +550,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = MacStateApp/MacStateApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -572,6 +577,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = MacStateApp/MacStateApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;

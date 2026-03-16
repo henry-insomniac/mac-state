@@ -14,6 +14,8 @@
 
 - [docs](/Users/Zhuanz/work-space/mac-state/docs)
   Product analysis, technical decisions, and the implementation roadmap.
+- [docs/branding](/Users/Zhuanz/work-space/mac-state/docs/branding)
+  Logo source files, preview exports, and macOS icon bundle output.
 - `App/MacStateApp`
   Native macOS application target and shell code.
 - `Packages/MacStateFoundation`
