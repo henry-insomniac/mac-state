@@ -30,24 +30,25 @@ struct SettingsView: View {
         ZStack {
             LinearGradient(
                 colors: [
-                    Color.accentColor.opacity(0.08),
-                    Color.primary.opacity(0.02),
+                    Color.primary.opacity(0.05),
+                    Color.primary.opacity(0.01),
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
             .ignoresSafeArea()
+            .opacity(0.85)
 
             ScrollView(.vertical) {
                 VStack(alignment: .leading, spacing: SettingsLayout.sectionSpacing) {
                     HStack(alignment: .center, spacing: 16) {
                         ZStack {
                             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                .fill(Color.accentColor.opacity(0.16))
+                                .fill(Color.primary.opacity(0.08))
 
                             Image(systemName: "waveform.path.ecg.rectangle.fill")
                                 .font(.title2)
-                                .foregroundColor(Color.accentColor)
+                                .foregroundColor(Color.primary)
                         }
                         .frame(width: 60, height: 60)
 
@@ -75,14 +76,38 @@ struct SettingsView: View {
                         }
                     }
 
-                    Picker("Settings Pane", selection: $selectedPane) {
-                        Text(appState.text(.general)).tag(SettingsPane.general)
-                        Text(appState.text(.alerts)).tag(SettingsPane.alerts)
-                        Text(appState.text(.diagnostics)).tag(SettingsPane.diagnostics)
-                        Text(appState.text(.aboutApp)).tag(SettingsPane.about)
+                    HStack(spacing: 8) {
+                        ForEach(SettingsPane.allCases) { pane in
+                            Button {
+                                withAnimation(.easeOut(duration: 0.18)) {
+                                    selectedPane = pane
+                                }
+                            } label: {
+                                Text(title(for: pane))
+                                    .font(.subheadline)
+                                    .bold()
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 10)
+                                    .padding(.horizontal, 12)
+                            }
+                            .buttonStyle(.plain)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(
+                                        selectedPane == pane
+                                            ? Color.primary.opacity(0.12)
+                                            : Color.primary.opacity(0.04)
+                                    )
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .strokeBorder(
+                                        Color.primary.opacity(selectedPane == pane ? 0.22 : 0.08),
+                                        lineWidth: 1
+                                    )
+                            )
+                        }
                     }
-                    .labelsHidden()
-                    .pickerStyle(.segmented)
 
                     switch selectedPane {
                     case .general:
@@ -140,6 +165,7 @@ struct SettingsView: View {
                                 ) {
                                     appState.refreshLaunchAtLoginStatus()
                                 }
+                                .buttonStyle(.bordered)
                             }
                         }
 
@@ -187,7 +213,7 @@ struct SettingsView: View {
                                     .padding(.vertical, 10)
                                     .background(
                                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                            .fill(Color.primary.opacity(0.05))
+                                            .fill(Color.primary.opacity(0.04))
                                     )
                                     .clipShape(.rect(cornerRadius: 12))
                             }
@@ -391,6 +417,7 @@ struct SettingsView: View {
                                 ) {
                                     refreshMetrics()
                                 }
+                                .buttonStyle(.bordered)
 
                                 SettingsControlRow(title: appState.text(.currentArchitecture)) {
                                     Text(appState.platformArchitectureText)
@@ -496,11 +523,11 @@ struct SettingsView: View {
                                 HStack(alignment: .center, spacing: 16) {
                                     ZStack {
                                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                            .fill(Color.accentColor.opacity(0.18))
+                                            .fill(Color.primary.opacity(0.08))
 
                                         Image(systemName: "waveform.path.ecg.rectangle.fill")
                                             .font(.title2)
-                                            .foregroundColor(Color.accentColor)
+                                            .foregroundColor(Color.primary)
                                     }
                                     .frame(width: 52, height: 52)
 
@@ -542,6 +569,7 @@ struct SettingsView: View {
                                     NSApp.activate(ignoringOtherApps: true)
                                     NSApp.orderFrontStandardAboutPanel(nil)
                                 }
+                                .buttonStyle(.bordered)
                             }
                         }
                     }
@@ -556,6 +584,19 @@ struct SettingsView: View {
             minWidth: SettingsLayout.minimumWindowWidth,
             minHeight: SettingsLayout.minimumWindowHeight
         )
+    }
+
+    private func title(for pane: SettingsPane) -> String {
+        switch pane {
+        case .general:
+            return appState.text(.general)
+        case .alerts:
+            return appState.text(.alerts)
+        case .diagnostics:
+            return appState.text(.diagnostics)
+        case .about:
+            return appState.text(.aboutApp)
+        }
     }
 
     private var appVersionText: String {

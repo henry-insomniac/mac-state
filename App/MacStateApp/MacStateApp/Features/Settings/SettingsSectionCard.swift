@@ -18,13 +18,13 @@ struct SettingsSectionCard<Content: View>: View {
     var body: some View {
         ZStack(alignment: .topLeading) {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.primary.opacity(0.04))
+                .fill(Color.primary.opacity(0.035))
 
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
 
             Capsule(style: .continuous)
-                .fill(Color.accentColor.opacity(0.75))
+                .fill(Color.primary.opacity(0.45))
                 .frame(width: 56, height: 4)
                 .padding(.top, 14)
                 .padding(.leading, 18)
