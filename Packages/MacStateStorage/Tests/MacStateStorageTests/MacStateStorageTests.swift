@@ -155,6 +155,39 @@ import MacStateMetrics
     #expect(restored == presentation)
 }
 
+@Test func metricHistoryCSVExporterProducesExpectedColumns() {
+    let samples = [
+        MetricHistorySample(
+            timestamp: Date(timeIntervalSince1970: 0),
+            cpuUsage: 0.125,
+            memoryUsage: 0.5,
+            diskUsage: 0.25,
+            diskThroughputBytesPerSecond: 300,
+            downloadBytesPerSecond: 200,
+            uploadBytesPerSecond: 100,
+            batteryLevel: 0.8
+        ),
+        MetricHistorySample(
+            timestamp: Date(timeIntervalSince1970: 60),
+            cpuUsage: 0.25,
+            memoryUsage: 0.6,
+            diskUsage: 0.3,
+            diskThroughputBytesPerSecond: 400,
+            downloadBytesPerSecond: 220,
+            uploadBytesPerSecond: 110,
+            batteryLevel: nil
+        ),
+    ]
+
+    let csv = MetricHistoryCSVExporter.csvString(for: samples)
+    let lines = csv.split(separator: "\n", omittingEmptySubsequences: false)
+
+    #expect(lines.count == 3)
+    #expect(lines[0] == "timestamp,cpu_usage_percent,memory_usage_percent,disk_usage_percent,disk_throughput_bytes_per_second,download_bytes_per_second,upload_bytes_per_second,network_throughput_bytes_per_second,battery_level_percent")
+    #expect(lines[1] == "1970-01-01T00:00:00Z,12.50,50,25,300,200,100,300,80")
+    #expect(lines[2] == "1970-01-01T00:01:00Z,25,60,30,400,220,110,330,")
+}
+
 private func temporaryHistoryFileURL(named name: String) -> URL {
     let baseDirectoryURL = FileManager.default.temporaryDirectory
         .appendingPathComponent("mac-state-tests", isDirectory: true)

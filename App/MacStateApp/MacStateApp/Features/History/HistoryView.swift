@@ -1,5 +1,7 @@
 import SwiftUI
+import UniformTypeIdentifiers
 import MacStateMetrics
+import MacStateStorage
 import MacStateUI
 
 private enum HistoryTimeRange: String, CaseIterable, Identifiable {
@@ -17,6 +19,35 @@ private enum HistoryTimeRange: String, CaseIterable, Identifiable {
         case .day:
             return "Minute-level aggregates retained for the last 24 hours"
         }
+    }
+
+    var fileNameComponent: String {
+        switch self {
+        case .live:
+            return "live"
+        case .day:
+            return "24-hours"
+        }
+    }
+}
+
+private struct HistoryExportDocument: FileDocument {
+    static var readableContentTypes: [UTType] {
+        [.commaSeparatedText]
+    }
+
+    let data: Data
+
+    init(csvString: String) {
+        self.data = Data(csvString.utf8)
+    }
+
+    init(configuration: ReadConfiguration) throws {
+        data = configuration.file.regularFileContents ?? Data()
+    }
+
+    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+        FileWrapper(regularFileWithContents: data)
     }
 }
 
@@ -61,13 +92,24 @@ private struct HistoryMetricCard: View {
 struct HistoryView: View {
     @ObservedObject var appState: AppState
     @State private var selectedRange: HistoryTimeRange = .live
+    @State private var exportDocument = HistoryExportDocument(csvString: "")
+    @State private var exportFilename = "mac-state-history.csv"
+    @State private var isExporting = false
+    @State private var exportErrorMessage: String?
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("History")
-                    .font(.title2)
-                    .bold()
+                HStack(alignment: .firstTextBaseline) {
+                    Text("History")
+                        .font(.title2)
+                        .bold()
+
+                    Spacer()
+
+                    Button("Export CSV", action: prepareExport)
+                        .disabled(selectedSamples.isEmpty)
+                }
 
                 Text(selectedRange.subtitle)
                     .foregroundColor(.secondary)
@@ -146,6 +188,25 @@ struct HistoryView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(width: 760, height: 820)
+        .fileExporter(
+            isPresented: $isExporting,
+            document: exportDocument,
+            contentType: .commaSeparatedText,
+            defaultFilename: exportFilename
+        ) { result in
+            if case .failure(let error) = result {
+                exportErrorMessage = error.localizedDescription
+            }
+        }
+        .alert(isPresented: exportErrorIsPresented) {
+            Alert(
+                title: Text("Export Failed"),
+                message: Text(exportErrorMessage ?? "Unable to export history as CSV."),
+                dismissButton: .default(Text("OK")) {
+                    exportErrorMessage = nil
+                }
+            )
+        }
     }
 
     private var selectedSamples: [MetricHistorySample] {
@@ -250,5 +311,45 @@ struct HistoryView: View {
         let decimalPart = Int(abs((roundedValue - Double(wholePart)) * 10).rounded())
 
         return "\(wholePart).\(decimalPart)"
+    }
+
+    private var exportErrorIsPresented: Binding<Bool> {
+        Binding(
+            get: { exportErrorMessage != nil },
+            set: { isPresented in
+                if isPresented == false {
+                    exportErrorMessage = nil
+                }
+            }
+        )
+    }
+
+    private func prepareExport() {
+        let csvString = MetricHistoryCSVExporter.csvString(for: selectedSamples)
+        exportDocument = HistoryExportDocument(csvString: csvString)
+        exportFilename = "mac-state-history-\(selectedRange.fileNameComponent)-\(timestampFileNameComponent()).csv"
+        isExporting = true
+    }
+
+    private func timestampFileNameComponent(now: Date = Date()) -> String {
+        let components = Calendar.current.dateComponents(
+            [.year, .month, .day, .hour, .minute],
+            from: now
+        )
+        let year = components.year ?? 0
+        let month = components.month ?? 0
+        let day = components.day ?? 0
+        let hour = components.hour ?? 0
+        let minute = components.minute ?? 0
+
+        return "\(year)-\(twoDigitString(month))-\(twoDigitString(day))-\(twoDigitString(hour))\(twoDigitString(minute))"
+    }
+
+    private func twoDigitString(_ value: Int) -> String {
+        if value < 10 {
+            return "0\(value)"
+        }
+
+        return "\(value)"
     }
 }
