@@ -19,7 +19,7 @@ struct SensorBridge {
 
         return SensorSnapshot(
             thermalCondition: thermalCondition,
-            sourceDescription: fallbackSourceDescription(
+            source: fallbackSource(
                 for: platform,
                 batteryTemperatureCelsius: batteryTemperatureCelsius
             ),
@@ -68,7 +68,7 @@ struct SensorBridge {
 
         return SensorSnapshot(
             thermalCondition: thermalCondition,
-            sourceDescription: "SMC bridge with live hardware telemetry.",
+            source: .smcBridge,
             cpuTemperatureCelsius: cpuTemperatureCelsius,
             gpuTemperatureCelsius: gpuTemperatureCelsius,
             batteryTemperatureCelsius: batteryTemperatureCelsius,
@@ -93,24 +93,24 @@ struct SensorBridge {
         }
     }
 
-    private func fallbackSourceDescription(
+    private func fallbackSource(
         for platform: PlatformCapabilities,
         batteryTemperatureCelsius: Double?
-    ) -> String {
+    ) -> SensorSource {
         if batteryTemperatureCelsius != nil {
             switch platform.architecture {
             case .appleSilicon:
-                return "Thermal state and battery telemetry are available. CPU/GPU temperature and fan telemetry need a deeper sensor bridge on Apple Silicon."
+                return .thermalAndBatteryOnlyAppleSilicon
             case .intel:
-                return "Thermal state and battery telemetry are available. SMC temperature or fan keys are unavailable on this Mac."
+                return .thermalAndBatteryOnlyIntel
             }
         }
 
         switch platform.architecture {
         case .appleSilicon:
-            return "Thermal state is available. CPU/GPU temperature and fan telemetry need a deeper sensor bridge on Apple Silicon."
+            return .thermalOnlyAppleSilicon
         case .intel:
-            return "Thermal state is available. SMC temperature and fan telemetry are unavailable on this Mac."
+            return .thermalOnlyIntel
         }
     }
 

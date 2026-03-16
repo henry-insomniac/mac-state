@@ -166,7 +166,7 @@ public extension MetricSnapshot {
             ),
             sensors: SensorSnapshot(
                 thermalCondition: .nominal,
-                sourceDescription: "Placeholder sensor telemetry.",
+                source: .placeholder,
                 cpuTemperatureCelsius: 58.0,
                 gpuTemperatureCelsius: 51.0,
                 batteryTemperatureCelsius: 33.8,

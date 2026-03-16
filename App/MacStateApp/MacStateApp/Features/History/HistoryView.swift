@@ -4,21 +4,12 @@ import MacStateMetrics
 import MacStateStorage
 import MacStateUI
 
-private enum HistoryTimeRange: String, CaseIterable, Identifiable {
-    case live = "Live"
-    case day = "24 Hours"
+private enum HistoryTimeRange: CaseIterable, Identifiable {
+    case live
+    case day
 
     var id: Self {
         self
-    }
-
-    var subtitle: String {
-        switch self {
-        case .live:
-            return "Recent raw samples captured during active monitoring"
-        case .day:
-            return "Minute-level aggregates retained for the last 24 hours"
-        }
     }
 
     var fileNameComponent: String {
@@ -59,6 +50,9 @@ private struct HistoryMetricCard: View {
     let latestText: String
     let averageText: String
     let peakText: String
+    let latestTitle: String
+    let averageTitle: String
+    let peakTitle: String
 
     var body: some View {
         MetricCard(title) {
@@ -68,9 +62,9 @@ private struct HistoryMetricCard: View {
             TimelineChart(values: values, tint: tint)
 
             HStack(spacing: 16) {
-                metricSummary(title: "Latest", value: latestText)
-                metricSummary(title: "Average", value: averageText)
-                metricSummary(title: "Peak", value: peakText)
+                metricSummary(title: latestTitle, value: latestText)
+                metricSummary(title: averageTitle, value: averageText)
+                metricSummary(title: peakTitle, value: peakText)
             }
         }
     }
@@ -101,22 +95,22 @@ struct HistoryView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(alignment: .firstTextBaseline) {
-                    Text("History")
+                    Text(appState.text(.history))
                         .font(.title2)
                         .bold()
 
                     Spacer()
 
-                    Button("Export CSV", action: prepareExport)
+                    Button(appState.text(.exportCSV), action: prepareExport)
                         .disabled(selectedSamples.isEmpty)
                 }
 
-                Text(selectedRange.subtitle)
+                Text(subtitle(for: selectedRange))
                     .foregroundColor(.secondary)
 
-                Picker("Time Range", selection: $selectedRange) {
+                Picker(appState.text(.timeRange), selection: $selectedRange) {
                     ForEach(HistoryTimeRange.allCases) { range in
-                        Text(range.rawValue).tag(range)
+                        Text(title(for: range)).tag(range)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -125,63 +119,81 @@ struct HistoryView: View {
                     .foregroundColor(.secondary)
 
                 HistoryMetricCard(
-                    title: "CPU Usage",
-                    subtitle: "Overall system CPU utilization",
+                    title: appState.text(.cpuUsage),
+                    subtitle: appState.text(.overallSystemCPUUtilization),
                     tint: .red,
                     values: values(for: \.cpuUsage),
                     latestText: percentageText(for: latestValue(for: \.cpuUsage)),
                     averageText: percentageText(for: averageValue(for: \.cpuUsage)),
-                    peakText: percentageText(for: peakValue(for: \.cpuUsage))
+                    peakText: percentageText(for: peakValue(for: \.cpuUsage)),
+                    latestTitle: appState.text(.latest),
+                    averageTitle: appState.text(.average),
+                    peakTitle: appState.text(.peak)
                 )
 
                 HistoryMetricCard(
-                    title: "Memory Usage",
-                    subtitle: "Resident memory pressure over time",
+                    title: appState.text(.memoryUsage),
+                    subtitle: appState.text(.residentMemoryPressureOverTime),
                     tint: .blue,
                     values: values(for: \.memoryUsage),
                     latestText: percentageText(for: latestValue(for: \.memoryUsage)),
                     averageText: percentageText(for: averageValue(for: \.memoryUsage)),
-                    peakText: percentageText(for: peakValue(for: \.memoryUsage))
+                    peakText: percentageText(for: peakValue(for: \.memoryUsage)),
+                    latestTitle: appState.text(.latest),
+                    averageTitle: appState.text(.average),
+                    peakTitle: appState.text(.peak)
                 )
 
                 HistoryMetricCard(
-                    title: "Network Throughput",
-                    subtitle: "Combined upload and download throughput",
+                    title: appState.text(.networkThroughput),
+                    subtitle: appState.text(.combinedUploadAndDownloadThroughput),
                     tint: .green,
                     values: values { Double($0.networkThroughputBytesPerSecond) },
                     latestText: rateText(for: latestValue { Double($0.networkThroughputBytesPerSecond) }),
                     averageText: rateText(for: averageValue { Double($0.networkThroughputBytesPerSecond) }),
-                    peakText: rateText(for: peakValue { Double($0.networkThroughputBytesPerSecond) })
+                    peakText: rateText(for: peakValue { Double($0.networkThroughputBytesPerSecond) }),
+                    latestTitle: appState.text(.latest),
+                    averageTitle: appState.text(.average),
+                    peakTitle: appState.text(.peak)
                 )
 
                 HistoryMetricCard(
-                    title: "Disk Activity",
-                    subtitle: "Combined read and write throughput",
+                    title: appState.text(.diskActivity),
+                    subtitle: appState.text(.combinedReadAndWriteThroughput),
                     tint: .gray,
                     values: values { Double($0.diskThroughputBytesPerSecond) },
                     latestText: rateText(for: latestValue { Double($0.diskThroughputBytesPerSecond) }),
                     averageText: rateText(for: averageValue { Double($0.diskThroughputBytesPerSecond) }),
-                    peakText: rateText(for: peakValue { Double($0.diskThroughputBytesPerSecond) })
+                    peakText: rateText(for: peakValue { Double($0.diskThroughputBytesPerSecond) }),
+                    latestTitle: appState.text(.latest),
+                    averageTitle: appState.text(.average),
+                    peakTitle: appState.text(.peak)
                 )
 
                 HistoryMetricCard(
-                    title: "Disk Capacity",
-                    subtitle: "Used capacity as a percentage of the primary volume",
+                    title: appState.text(.diskCapacity),
+                    subtitle: appState.text(.usedCapacityPrimaryVolume),
                     tint: Color(red: 0.55, green: 0.38, blue: 0.22),
                     values: values(for: \.diskUsage),
                     latestText: percentageText(for: latestValue(for: \.diskUsage)),
                     averageText: percentageText(for: averageValue(for: \.diskUsage)),
-                    peakText: percentageText(for: peakValue(for: \.diskUsage))
+                    peakText: percentageText(for: peakValue(for: \.diskUsage)),
+                    latestTitle: appState.text(.latest),
+                    averageTitle: appState.text(.average),
+                    peakTitle: appState.text(.peak)
                 )
 
                 HistoryMetricCard(
-                    title: "Battery Level",
-                    subtitle: "Battery percentage when battery metrics are available",
+                    title: appState.text(.batteryLevel),
+                    subtitle: appState.text(.batteryPercentageWhenAvailable),
                     tint: .orange,
                     values: values { $0.batteryLevel },
                     latestText: percentageText(for: latestValue { $0.batteryLevel }),
                     averageText: percentageText(for: averageValue { $0.batteryLevel }),
-                    peakText: percentageText(for: peakValue { $0.batteryLevel })
+                    peakText: percentageText(for: peakValue { $0.batteryLevel }),
+                    latestTitle: appState.text(.latest),
+                    averageTitle: appState.text(.average),
+                    peakTitle: appState.text(.peak)
                 )
             }
             .padding()
@@ -200,9 +212,9 @@ struct HistoryView: View {
         }
         .alert(isPresented: exportErrorIsPresented) {
             Alert(
-                title: Text("Export Failed"),
-                message: Text(exportErrorMessage ?? "Unable to export history as CSV."),
-                dismissButton: .default(Text("OK")) {
+                title: Text(appState.text(.exportFailed)),
+                message: Text(exportErrorMessage ?? appState.text(.unableExportHistoryCSV)),
+                dismissButton: .default(Text(appState.text(.ok))) {
                     exportErrorMessage = nil
                 }
             )
@@ -283,7 +295,7 @@ struct HistoryView: View {
 
     private func percentageText(for value: Double?) -> String {
         guard let value else {
-            return "Unavailable"
+            return appState.text(.unavailable)
         }
 
         return "\(Int((value * 100).rounded()))%"
@@ -291,7 +303,7 @@ struct HistoryView: View {
 
     private func rateText(for value: Double?) -> String {
         guard let value else {
-            return "Unavailable"
+            return appState.text(.unavailable)
         }
 
         if value >= 1_048_576 {
@@ -329,6 +341,24 @@ struct HistoryView: View {
         exportDocument = HistoryExportDocument(csvString: csvString)
         exportFilename = "mac-state-history-\(selectedRange.fileNameComponent)-\(timestampFileNameComponent()).csv"
         isExporting = true
+    }
+
+    private func title(for range: HistoryTimeRange) -> String {
+        switch range {
+        case .live:
+            appState.text(.live)
+        case .day:
+            appState.text(.day24Hours)
+        }
+    }
+
+    private func subtitle(for range: HistoryTimeRange) -> String {
+        switch range {
+        case .live:
+            appState.text(.liveHistorySubtitle)
+        case .day:
+            appState.text(.dayHistorySubtitle)
+        }
     }
 
     private func timestampFileNameComponent(now: Date = Date()) -> String {

@@ -10,23 +10,23 @@ struct DashboardView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("mac-state")
+                Text(appState.text(.appTitle))
                     .font(.title2)
                     .bold()
 
-                Text("Live macOS system monitor")
+                Text(appState.text(.liveMacOSSystemMonitor))
                     .foregroundColor(.secondary)
 
-                MetricCard("CPU") {
+                MetricCard(appState.text(.cpu)) {
                     Text(appState.cpuUsageText)
                         .font(.title2)
                         .bold()
 
-                    Text("Architecture: \(appState.platformSummary)")
+                    Text("\(appState.text(.architecturePrefix)): \(appState.platformArchitectureText)")
                         .foregroundColor(.secondary)
                 }
 
-                MetricCard("CPU Cores") {
+                MetricCard(appState.text(.cpuCores)) {
                     Text(appState.cpuCoreCountText)
                         .foregroundColor(.secondary)
 
@@ -44,7 +44,7 @@ struct DashboardView: View {
                     ) {
                         ForEach(appState.cpuCores) { core in
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("Core \(core.index + 1)")
+                                Text("\(appState.text(.cpu)) \(core.index + 1)")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
 
@@ -58,7 +58,7 @@ struct DashboardView: View {
                     }
                 }
 
-                MetricCard("Memory") {
+                MetricCard(appState.text(.memory)) {
                     Text(appState.memoryUsageText)
                         .font(.title2)
                         .bold()
@@ -67,7 +67,7 @@ struct DashboardView: View {
                         .foregroundColor(.secondary)
                 }
 
-                MetricCard("Disk") {
+                MetricCard(appState.text(.disk)) {
                     Text(appState.diskUsageText)
                         .font(.title2)
                         .bold()
@@ -79,7 +79,7 @@ struct DashboardView: View {
                         .foregroundColor(.secondary)
                 }
 
-                MetricCard("Battery") {
+                MetricCard(appState.text(.battery)) {
                     Text(appState.batteryStatusText)
                         .font(.title2)
                         .bold()
@@ -88,7 +88,7 @@ struct DashboardView: View {
                         .foregroundColor(.secondary)
                 }
 
-                MetricCard("Sensors") {
+                MetricCard(appState.text(.sensors)) {
                     Text(appState.thermalConditionText)
                         .font(.title3)
                         .bold()
@@ -102,7 +102,7 @@ struct DashboardView: View {
 
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(alignment: .firstTextBaseline) {
-                            Text("CPU")
+                            Text(appState.text(.cpuLabel))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
 
@@ -113,7 +113,7 @@ struct DashboardView: View {
                         }
 
                         HStack(alignment: .firstTextBaseline) {
-                            Text("GPU")
+                            Text(appState.text(.gpuLabel))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
 
@@ -124,7 +124,7 @@ struct DashboardView: View {
                         }
 
                         HStack(alignment: .firstTextBaseline) {
-                            Text("Battery")
+                            Text(appState.text(.batteryLabel))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
 
@@ -143,7 +143,7 @@ struct DashboardView: View {
                             ForEach(appState.sensors.fans) { fan in
                                 HStack(alignment: .firstTextBaseline) {
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text("Fan \(fan.index + 1)")
+                                        Text(appState.resolvedLanguage == .simplifiedChinese ? "风扇 \(fan.index + 1)" : "Fan \(fan.index + 1)")
                                             .font(.caption)
                                             .foregroundColor(.secondary)
 
@@ -165,16 +165,16 @@ struct DashboardView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                MetricCard("Network") {
+                MetricCard(appState.text(.network)) {
                     Text(appState.downloadRateText)
                         .font(.title2)
                         .bold()
 
-                    Text("Upload \(appState.uploadRateText) • \(appState.networkStatusText)")
+                    Text("\(appState.text(.upload)) \(appState.uploadRateText) • \(appState.networkStatusText)")
                         .foregroundColor(.secondary)
                 }
 
-                MetricCard("Alerts") {
+                MetricCard(appState.text(.alerts)) {
                     Text(appState.alertsStatusText)
                         .font(.headline)
 
@@ -208,45 +208,45 @@ struct DashboardView: View {
                     }
                 }
 
-                MetricCard("Trends") {
+                MetricCard(appState.text(.trends)) {
                     Text(appState.historySummaryText)
                         .foregroundColor(.secondary)
 
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("CPU")
+                        Text(appState.text(.cpu))
                             .font(.subheadline)
                             .bold()
                         TrendStrip(values: appState.cpuTrendValues, tint: .red)
 
-                        Text("Memory")
+                        Text(appState.text(.memory))
                             .font(.subheadline)
                             .bold()
                         TrendStrip(values: appState.memoryTrendValues, tint: .blue)
 
-                        Text("Network")
+                        Text(appState.text(.network))
                             .font(.subheadline)
                             .bold()
                         TrendStrip(values: appState.networkTrendValues, tint: .green)
 
-                        Text("Battery")
+                        Text(appState.text(.battery))
                             .font(.subheadline)
                             .bold()
                         TrendStrip(values: appState.batteryTrendValues, tint: .orange)
 
-                        Text("Disk")
+                        Text(appState.text(.disk))
                             .font(.subheadline)
                             .bold()
                         TrendStrip(values: appState.diskTrendValues, tint: .gray)
                     }
                 }
 
-                MetricCard("Running Apps") {
+                MetricCard(appState.text(.runningApps)) {
                     Text(appState.runningAppsText)
                         .font(.title3)
                         .bold()
 
                     if appState.processes.isEmpty {
-                        Text("Visible apps will appear after the first process scan.")
+                        Text(appState.text(.visibleAppsAfterScan))
                             .foregroundColor(.secondary)
                     } else {
                         VStack(alignment: .leading, spacing: 8) {
@@ -258,7 +258,7 @@ struct DashboardView: View {
                                     Spacer()
 
                                     if process.isFrontmost {
-                                        Text("Frontmost")
+                                        Text(appState.text(.frontmost))
                                             .foregroundColor(.secondary)
                                     } else {
                                         Text("PID \(process.pid)")
@@ -270,7 +270,7 @@ struct DashboardView: View {
                     }
                 }
 
-                Text("Last updated \(appState.lastUpdatedText)")
+                Text("\(appState.text(.lastUpdated)) \(appState.lastUpdatedText)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
 
@@ -282,19 +282,19 @@ struct DashboardView: View {
                 Button {
                     refreshMetrics()
                 } label: {
-                    Label("Refresh Metrics", systemImage: "arrow.clockwise")
+                    Label(appState.text(.refreshMetrics), systemImage: "arrow.clockwise")
                 }
 
                 Button {
                     openHistory()
                 } label: {
-                    Label("Open History", systemImage: "chart.xyaxis.line")
+                    Label(appState.text(.openHistory), systemImage: "chart.xyaxis.line")
                 }
 
                 Button {
                     openSettings()
                 } label: {
-                    Label("Open Settings", systemImage: "gearshape")
+                    Label(appState.text(.openSettings), systemImage: "gearshape")
                 }
             }
             .padding()

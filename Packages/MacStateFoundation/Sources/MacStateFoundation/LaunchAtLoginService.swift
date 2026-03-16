@@ -13,13 +13,38 @@ public enum LaunchAtLoginError: LocalizedError, Sendable, Equatable {
     case unregistrationFailed(String)
 
     public var errorDescription: String? {
+        description(language: .english)
+    }
+
+    public func description(language: AppLanguage) -> String {
         switch self {
         case .legacyHelperRequired:
-            return "Launch at login on macOS 11 and 12 requires the bundled login helper target."
+            switch language.resolvedLanguage {
+            case .system:
+                return "Launch at login on macOS 11 and 12 requires the bundled login helper target."
+            case .simplifiedChinese:
+                return "在 macOS 11 和 12 上启用登录启动，需要使用随应用打包的登录辅助程序。"
+            case .english:
+                return "Launch at login on macOS 11 and 12 requires the bundled login helper target."
+            }
         case let .registrationFailed(message):
-            return "Unable to enable launch at login: \(message)"
+            switch language.resolvedLanguage {
+            case .system:
+                return "Unable to enable launch at login: \(message)"
+            case .simplifiedChinese:
+                return "无法启用登录启动：\(message)"
+            case .english:
+                return "Unable to enable launch at login: \(message)"
+            }
         case let .unregistrationFailed(message):
-            return "Unable to disable launch at login: \(message)"
+            switch language.resolvedLanguage {
+            case .system:
+                return "Unable to disable launch at login: \(message)"
+            case .simplifiedChinese:
+                return "无法关闭登录启动：\(message)"
+            case .english:
+                return "Unable to disable launch at login: \(message)"
+            }
         }
     }
 }

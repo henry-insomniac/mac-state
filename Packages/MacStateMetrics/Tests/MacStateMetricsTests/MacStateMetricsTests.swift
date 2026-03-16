@@ -118,7 +118,7 @@ import MacStateFoundation
         ),
         sensors: SensorSnapshot(
             thermalCondition: .serious,
-            sourceDescription: "Test sensor data",
+            source: .smcBridge,
             cpuTemperatureCelsius: 92,
             gpuTemperatureCelsius: 74,
             batteryTemperatureCelsius: 35,
@@ -172,6 +172,25 @@ import MacStateFoundation
     #expect(widgetSnapshot.networkDownloadBytesPerSecond == snapshot.networkDownloadBytesPerSecond)
     #expect(widgetSnapshot.networkUploadBytesPerSecond == snapshot.networkUploadBytesPerSecond)
     #expect(widgetSnapshot.batteryLevel == snapshot.battery?.level)
+}
+
+@Test func alertEvaluatorUsesSelectedLanguage() {
+    let snapshot = MetricSnapshot.placeholder()
+    let configuration = MetricAlertConfiguration(
+        cpuHighUsage: MetricAlertRule(isEnabled: true, thresholdPercent: 10),
+        memoryHighUsage: MetricAlertRule(isEnabled: false, thresholdPercent: 90),
+        batteryLowLevel: MetricAlertRule(isEnabled: false, thresholdPercent: 20),
+        diskActivityHigh: DiskActivityAlertRule(isEnabled: false, thresholdMegabytesPerSecond: 200),
+        cooldownMinutes: 5
+    )
+
+    let alerts = MetricAlertEvaluator.alerts(
+        for: snapshot,
+        configuration: configuration,
+        language: .simplifiedChinese
+    )
+
+    #expect(alerts.first?.title == "CPU 使用率过高")
 }
 
 @Test func thermalConditionMapsFromProcessInfoValues() {

@@ -5,14 +5,26 @@ public enum MenuBarTextMode: String, CaseIterable, Codable, Sendable, Equatable 
     case appName
     case iconOnly
 
-    public var title: String {
-        switch self {
-        case .selectedMetric:
-            "Selected Metric"
-        case .appName:
-            "App Name"
-        case .iconOnly:
-            "Icon Only"
+    public func localizedTitle(language: AppLanguage) -> String {
+        switch (language.resolvedLanguage, self) {
+        case (.system, .selectedMetric):
+            return "Selected Metric"
+        case (.system, .appName):
+            return "App Name"
+        case (.system, .iconOnly):
+            return "Icon Only"
+        case (.simplifiedChinese, .selectedMetric):
+            return "所选指标"
+        case (.simplifiedChinese, .appName):
+            return "应用名称"
+        case (.simplifiedChinese, .iconOnly):
+            return "仅图标"
+        case (.english, .selectedMetric):
+            return "Selected Metric"
+        case (.english, .appName):
+            return "App Name"
+        case (.english, .iconOnly):
+            return "Icon Only"
         }
     }
 }
@@ -25,20 +37,44 @@ public enum MenuBarPrimaryMetric: String, CaseIterable, Codable, Sendable, Equat
     case diskActivity
     case batteryLevel
 
-    public var title: String {
-        switch self {
-        case .cpuUsage:
-            "CPU Usage"
-        case .memoryUsage:
-            "Memory Usage"
-        case .networkDownload:
-            "Network Download"
-        case .networkUpload:
-            "Network Upload"
-        case .diskActivity:
-            "Disk Activity"
-        case .batteryLevel:
-            "Battery Level"
+    public func localizedTitle(language: AppLanguage) -> String {
+        switch (language.resolvedLanguage, self) {
+        case (.system, .cpuUsage):
+            return "CPU Usage"
+        case (.system, .memoryUsage):
+            return "Memory Usage"
+        case (.system, .networkDownload):
+            return "Network Download"
+        case (.system, .networkUpload):
+            return "Network Upload"
+        case (.system, .diskActivity):
+            return "Disk Activity"
+        case (.system, .batteryLevel):
+            return "Battery Level"
+        case (.simplifiedChinese, .cpuUsage):
+            return "CPU 使用率"
+        case (.simplifiedChinese, .memoryUsage):
+            return "内存使用率"
+        case (.simplifiedChinese, .networkDownload):
+            return "网络下载"
+        case (.simplifiedChinese, .networkUpload):
+            return "网络上传"
+        case (.simplifiedChinese, .diskActivity):
+            return "磁盘活动"
+        case (.simplifiedChinese, .batteryLevel):
+            return "电池电量"
+        case (.english, .cpuUsage):
+            return "CPU Usage"
+        case (.english, .memoryUsage):
+            return "Memory Usage"
+        case (.english, .networkDownload):
+            return "Network Download"
+        case (.english, .networkUpload):
+            return "Network Upload"
+        case (.english, .diskActivity):
+            return "Disk Activity"
+        case (.english, .batteryLevel):
+            return "Battery Level"
         }
     }
 

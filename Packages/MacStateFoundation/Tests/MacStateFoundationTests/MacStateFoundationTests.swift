@@ -56,3 +56,13 @@ import Foundation
 
     #expect(restored == .placeholder)
 }
+
+@Test func menuBarPresentationTitlesCanBeLocalized() {
+    #expect(MenuBarTextMode.iconOnly.localizedTitle(language: .simplifiedChinese) == "仅图标")
+    #expect(MenuBarPrimaryMetric.diskActivity.localizedTitle(language: .simplifiedChinese) == "磁盘活动")
+}
+
+@Test func appLanguageDisplayNameRespectsPresentationLanguage() {
+    #expect(AppLanguage.system.displayName(in: .english) == "System")
+    #expect(AppLanguage.system.displayName(in: .simplifiedChinese) == "跟随系统")
+}

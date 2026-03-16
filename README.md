@@ -49,7 +49,8 @@ This repository currently contains a working MVP foundation:
 - live history window with recent raw samples, 24-hour minute-level aggregates, and CSV export
 - configurable local alerts for CPU, memory, battery, and disk activity
 - launch-at-login control across macOS 11+, using `SMAppService` on macOS 13+ and a bundled helper on macOS 11-12
-- settings window for compact mode and alert thresholds
+- English / Simplified Chinese language switching for the main app experience
+- settings window for compact mode, language selection, and alert thresholds
 - local Swift packages with tests
 - project documentation and repository scaffolding
 

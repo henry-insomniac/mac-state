@@ -1,19 +1,24 @@
 import Foundation
+import MacStateFoundation
 
 public enum MetricAlertEvaluator {
     public static func alerts(
         for snapshot: MetricSnapshot,
-        configuration: MetricAlertConfiguration
+        configuration: MetricAlertConfiguration,
+        language: AppLanguage = .system
     ) -> [MetricAlert] {
         var alerts: [MetricAlert] = []
+        let resolvedLanguage = language.resolvedLanguage
 
         if configuration.cpuHighUsage.isEnabled,
            snapshot.cpuUsage >= configuration.cpuHighUsage.thresholdValue {
             alerts.append(
                 MetricAlert(
                     type: .cpuHighUsage,
-                    title: "CPU usage is high",
-                    body: "CPU load reached \(percentageString(from: snapshot.cpuUsage))."
+                    title: resolvedLanguage == .simplifiedChinese ? "CPU 使用率过高" : "CPU usage is high",
+                    body: resolvedLanguage == .simplifiedChinese
+                        ? "CPU 负载已达到 \(percentageString(from: snapshot.cpuUsage))。"
+                        : "CPU load reached \(percentageString(from: snapshot.cpuUsage))."
                 )
             )
         }
@@ -23,8 +28,10 @@ public enum MetricAlertEvaluator {
             alerts.append(
                 MetricAlert(
                     type: .memoryHighUsage,
-                    title: "Memory pressure is high",
-                    body: "Memory usage reached \(percentageString(from: snapshot.memoryUsage))."
+                    title: resolvedLanguage == .simplifiedChinese ? "内存压力过高" : "Memory pressure is high",
+                    body: resolvedLanguage == .simplifiedChinese
+                        ? "内存使用率已达到 \(percentageString(from: snapshot.memoryUsage))。"
+                        : "Memory usage reached \(percentageString(from: snapshot.memoryUsage))."
                 )
             )
         }
@@ -36,8 +43,10 @@ public enum MetricAlertEvaluator {
             alerts.append(
                 MetricAlert(
                     type: .batteryLowLevel,
-                    title: "Battery is running low",
-                    body: "Battery level dropped to \(percentageString(from: battery.level))."
+                    title: resolvedLanguage == .simplifiedChinese ? "电池电量过低" : "Battery is running low",
+                    body: resolvedLanguage == .simplifiedChinese
+                        ? "电池电量已下降到 \(percentageString(from: battery.level))。"
+                        : "Battery level dropped to \(percentageString(from: battery.level))."
                 )
             )
         }
@@ -48,8 +57,10 @@ public enum MetricAlertEvaluator {
             alerts.append(
                 MetricAlert(
                     type: .diskActivityHigh,
-                    title: "Disk activity is high",
-                    body: "Disk throughput reached \(megabytesPerSecondString(from: diskThroughput))."
+                    title: resolvedLanguage == .simplifiedChinese ? "磁盘活动过高" : "Disk activity is high",
+                    body: resolvedLanguage == .simplifiedChinese
+                        ? "磁盘吞吐已达到 \(megabytesPerSecondString(from: diskThroughput))。"
+                        : "Disk throughput reached \(megabytesPerSecondString(from: diskThroughput))."
                 )
             )
         }

@@ -84,7 +84,8 @@ final class AppMetricsMonitor {
                 await alertNotificationService.requestAuthorizationIfNeeded()
                 let alerts = MetricAlertEvaluator.alerts(
                     for: snapshot,
-                    configuration: alertConfiguration
+                    configuration: alertConfiguration,
+                    language: appState.appLanguage
                 )
                 appState.updateAlertActivity(
                     with: alerts,
@@ -96,7 +97,11 @@ final class AppMetricsMonitor {
                 )
             }
         } catch {
-            appState.setErrorMessage("Unable to read system metrics")
+            appState.setErrorMessage(
+                appState.resolvedLanguage == .simplifiedChinese
+                    ? "无法读取系统指标"
+                    : "Unable to read system metrics"
+            )
         }
     }
 }

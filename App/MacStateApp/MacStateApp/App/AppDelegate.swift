@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -20,13 +21,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         appState: container.appState,
         popoverController: popoverController
     )
+    private var subscriptions = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
         NSApp.mainMenu = makeMainMenu()
+        observeLanguageChanges()
         statusItemController.start()
         Task {
             await container.appState.loadPersistedState()
+            refreshLocalizedChrome()
             if container.appState.alertConfiguration.hasEnabledRules {
                 await container.alertNotificationService.requestAuthorizationIfNeeded()
             }
@@ -59,46 +63,61 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.terminate(nil)
     }
 
+    private func observeLanguageChanges() {
+        container.appState.$appLanguage
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.refreshLocalizedChrome()
+            }
+            .store(in: &subscriptions)
+    }
+
+    private func refreshLocalizedChrome() {
+        NSApp.mainMenu = makeMainMenu()
+        windowRouter.refreshLocalizedChrome()
+    }
+
     private func makeMainMenu() -> NSMenu {
         let mainMenu = NSMenu()
         let applicationMenuItem = NSMenuItem()
         let applicationMenu = NSMenu()
 
         applicationMenu.addItem(
-            withTitle: "About mac-state",
+            withTitle: container.appState.text(.aboutApp),
             action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)),
             keyEquivalent: ""
         )
         applicationMenu.addItem(.separator())
         applicationMenu.addItem(
-            withTitle: "Settings…",
+            withTitle: container.appState.text(.settings) + "…",
             action: #selector(openSettings(_:)),
             keyEquivalent: ","
         )
         applicationMenu.addItem(
-            withTitle: "History",
+            withTitle: container.appState.text(.history),
             action: #selector(openHistory(_:)),
             keyEquivalent: ""
         )
         applicationMenu.addItem(.separator())
         applicationMenu.addItem(
-            withTitle: "Hide mac-state",
+            withTitle: container.appState.text(.hideApp),
             action: #selector(NSApplication.hide(_:)),
             keyEquivalent: "h"
         )
         applicationMenu.addItem(
-            withTitle: "Hide Others",
+            withTitle: container.appState.text(.hideOthers),
             action: #selector(NSApplication.hideOtherApplications(_:)),
             keyEquivalent: "h"
         ).keyEquivalentModifierMask = [.command, .option]
         applicationMenu.addItem(
-            withTitle: "Show All",
+            withTitle: container.appState.text(.showAll),
             action: #selector(NSApplication.unhideAllApplications(_:)),
             keyEquivalent: ""
         )
         applicationMenu.addItem(.separator())
         applicationMenu.addItem(
-            withTitle: "Quit mac-state",
+            withTitle: container.appState.text(.quitApp),
             action: #selector(quitApplication(_:)),
             keyEquivalent: "q"
         )

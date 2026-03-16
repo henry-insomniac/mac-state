@@ -17,6 +17,7 @@ final class WindowRouter {
         let window = settingsWindow ?? makeSettingsWindow()
 
         settingsWindow = window
+        refreshLocalizedChrome()
         window.center()
         window.makeKeyAndOrderFront(nil)
     }
@@ -25,8 +26,14 @@ final class WindowRouter {
         let window = historyWindow ?? makeHistoryWindow()
 
         historyWindow = window
+        refreshLocalizedChrome()
         window.center()
         window.makeKeyAndOrderFront(nil)
+    }
+
+    func refreshLocalizedChrome() {
+        settingsWindow?.title = appState.text(.settings)
+        historyWindow?.title = appState.text(.history)
     }
 
     private func makeSettingsWindow() -> NSWindow {
@@ -40,7 +47,7 @@ final class WindowRouter {
         )
 
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "Settings"
+        window.title = appState.text(.settings)
         window.styleMask = [.titled, .closable, .miniaturizable]
         window.setContentSize(NSSize(width: 520, height: 560))
 
@@ -53,7 +60,7 @@ final class WindowRouter {
         )
 
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "History"
+        window.title = appState.text(.history)
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
         window.setContentSize(NSSize(width: 760, height: 820))
         window.minSize = NSSize(width: 680, height: 720)

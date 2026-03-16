@@ -18,6 +18,7 @@ final class AppState: ObservableObject {
     }
 
     @Published private(set) var menuBarPresentation = MenuBarPresentation.default
+    @Published private(set) var appLanguage: AppLanguage = .system
     @Published private(set) var alertConfiguration = MetricAlertConfiguration()
     @Published private(set) var launchAtLoginStatus = LaunchAtLoginStatus(
         availability: PlatformCapabilities.current.supportsModernLoginItems ? .supported : .requiresLegacyHelper,
@@ -39,7 +40,7 @@ final class AppState: ObservableObject {
     @Published private(set) var batterySnapshot: BatterySnapshot?
     @Published private(set) var sensors = SensorSnapshot(
         thermalCondition: .nominal,
-        sourceDescription: "Collecting sensor telemetry",
+        source: .collecting,
         cpuTemperatureCelsius: nil,
         gpuTemperatureCelsius: nil,
         batteryTemperatureCelsius: nil,
@@ -69,12 +70,32 @@ final class AppState: ObservableObject {
         self.historyStore = historyStore
     }
 
+    var resolvedLanguage: AppLanguage {
+        appLanguage.resolvedLanguage
+    }
+
+    func text(_ key: AppTextKey) -> String {
+        AppText.value(key, language: appLanguage)
+    }
+
+    func languageDisplayName(_ language: AppLanguage) -> String {
+        language.displayName(in: appLanguage)
+    }
+
+    func menuBarTextModeTitle(_ value: MenuBarTextMode) -> String {
+        value.localizedTitle(language: appLanguage)
+    }
+
+    func menuBarPrimaryMetricTitle(_ value: MenuBarPrimaryMetric) -> String {
+        value.localizedTitle(language: appLanguage)
+    }
+
     var menuBarTitle: String {
         switch menuBarPresentation.textMode {
         case .iconOnly:
             return ""
         case .appName:
-            return "mac-state"
+            return text(.appTitle)
         case .selectedMetric:
             return menuBarMetricText
         }
@@ -85,28 +106,43 @@ final class AppState: ObservableObject {
     }
 
     var menuBarAccessibilityLabel: String {
-        let metricTitle = menuBarPresentation.primaryMetric.title
+        let metricTitle = menuBarPrimaryMetricTitle(menuBarPresentation.primaryMetric)
         let metricText = menuBarMetricText
 
         if menuBarPresentation.textMode == .appName {
-            return "mac-state, \(metricTitle) \(metricText)"
+            return "\(text(.appTitle)), \(metricTitle) \(metricText)"
         }
 
         if menuBarPresentation.textMode == .iconOnly {
             return "\(metricTitle) \(metricText)"
         }
 
-        return "mac-state \(metricText)"
+        return "\(text(.appTitle)) \(metricText)"
     }
 
     var menuBarSettingsSummaryText: String {
         switch menuBarPresentation.textMode {
         case .selectedMetric:
-            return "The menu bar shows \(menuBarPresentation.primaryMetric.title.lowercased()) as live text."
+            switch resolvedLanguage {
+            case .simplifiedChinese:
+                return "菜单栏会实时显示\(menuBarPrimaryMetricTitle(menuBarPresentation.primaryMetric))。"
+            case .english, .system:
+                return "The menu bar shows \(menuBarPrimaryMetricTitle(menuBarPresentation.primaryMetric).lowercased()) as live text."
+            }
         case .appName:
-            return "The menu bar keeps the app name visible and uses the metric icon for quick context."
+            switch resolvedLanguage {
+            case .simplifiedChinese:
+                return "菜单栏会显示应用名称，并保留指标图标用于快速识别。"
+            case .english, .system:
+                return "The menu bar keeps the app name visible and uses the metric icon for quick context."
+            }
         case .iconOnly:
-            return "The menu bar stays icon-only and keeps the selected metric ready for future text mode."
+            switch resolvedLanguage {
+            case .simplifiedChinese:
+                return "菜单栏保持仅图标显示，同时保留当前指标供以后切回文本模式。"
+            case .english, .system:
+                return "The menu bar stays icon-only and keeps the selected metric ready for future text mode."
+            }
         }
     }
 
@@ -115,9 +151,9 @@ final class AppState: ObservableObject {
         case .selectedMetric:
             return menuBarMetricText
         case .appName:
-            return "mac-state"
+            return text(.appTitle)
         case .iconOnly:
-            return "Icon only"
+            return menuBarTextModeTitle(.iconOnly)
         }
     }
 
@@ -126,29 +162,42 @@ final class AppState: ObservableObject {
     }
 
     var menuBarMetricTitle: String {
-        menuBarPresentation.primaryMetric.title
+        menuBarPrimaryMetricTitle(menuBarPresentation.primaryMetric)
     }
 
     var alertsSummaryText: String {
         if alertConfiguration.hasEnabledRules == false {
-            return "All alerts are disabled"
+            return resolvedLanguage == .simplifiedChinese ? "所有告警均已关闭" : "All alerts are disabled"
         }
 
-        return "Cooldown \(alertConfiguration.clampedCooldownMinutes)m"
+        switch resolvedLanguage {
+        case .simplifiedChinese:
+            return "冷却时间 \(alertConfiguration.clampedCooldownMinutes) 分钟"
+        case .english, .system:
+            return "Cooldown \(alertConfiguration.clampedCooldownMinutes)m"
+        }
     }
 
     var launchAtLoginSummaryText: String {
         switch launchAtLoginStatus.availability {
         case .requiresLegacyHelper:
-            return "Launch at login needs the legacy helper path on macOS 11 and 12"
+            return resolvedLanguage == .simplifiedChinese
+                ? "在 macOS 11 和 12 上，登录启动需要 legacy helper 路径"
+                : "Launch at login needs the legacy helper path on macOS 11 and 12"
         case .supported:
             switch launchAtLoginStatus.registrationState {
             case .disabled:
-                return "mac-state will stay manual until you enable launch at login"
+                return resolvedLanguage == .simplifiedChinese
+                    ? "在你启用登录启动之前，mac-state 会保持手动启动"
+                    : "mac-state will stay manual until you enable launch at login"
             case .enabled:
-                return "mac-state will launch automatically after you sign in"
+                return resolvedLanguage == .simplifiedChinese
+                    ? "登录后 mac-state 会自动启动"
+                    : "mac-state will launch automatically after you sign in"
             case .requiresApproval:
-                return "Launch at login is waiting for approval in System Settings"
+                return resolvedLanguage == .simplifiedChinese
+                    ? "登录启动正在等待系统设置中的批准"
+                    : "Launch at login is waiting for approval in System Settings"
             }
         }
     }
@@ -156,58 +205,80 @@ final class AppState: ObservableObject {
     var launchAtLoginDetailText: String {
         switch launchAtLoginStatus.availability {
         case .requiresLegacyHelper:
-            return "The legacy login helper is required on macOS 11 and 12, but it is not available in the current build."
+            return resolvedLanguage == .simplifiedChinese
+                ? "macOS 11 和 12 需要 legacy 登录辅助程序，但当前构建中不可用。"
+                : "The legacy login helper is required on macOS 11 and 12, but it is not available in the current build."
         case .supported:
             if PlatformCapabilities.current.supportsModernLoginItems == false {
-                return "macOS 11 and 12 use the bundled login helper app inside Contents/Library/LoginItems."
+                return resolvedLanguage == .simplifiedChinese
+                    ? "macOS 11 和 12 使用打包在 Contents/Library/LoginItems 中的登录辅助程序。"
+                    : "macOS 11 and 12 use the bundled login helper app inside Contents/Library/LoginItems."
             }
 
             if launchAtLoginStatus.requiresApproval {
-                return "Approve mac-state in System Settings > General > Login Items, then refresh the status here."
+                return resolvedLanguage == .simplifiedChinese
+                    ? "请在 系统设置 > 通用 > 登录项 中批准 mac-state，然后回到这里刷新状态。"
+                    : "Approve mac-state in System Settings > General > Login Items, then refresh the status here."
             }
 
-            return "macOS 13+ uses ServiceManagement to register the main app without a separate login helper."
+            return resolvedLanguage == .simplifiedChinese
+                ? "macOS 13+ 使用 ServiceManagement 直接注册主应用，无需单独的登录辅助程序。"
+                : "macOS 13+ uses ServiceManagement to register the main app without a separate login helper."
         }
     }
 
     var alertsStatusText: String {
         if alertConfiguration.hasEnabledRules == false {
-            return "Enable at least one rule to receive alerts"
+            return resolvedLanguage == .simplifiedChinese
+                ? "至少启用一条规则后才能接收告警"
+                : "Enable at least one rule to receive alerts"
         }
 
         if activeAlertTypes.isEmpty {
-            return "No alert conditions are currently active"
+            return resolvedLanguage == .simplifiedChinese
+                ? "当前没有活跃的告警条件"
+                : "No alert conditions are currently active"
         }
 
         if activeAlertTypes.count == 1 {
-            return "1 alert condition is currently active"
+            return resolvedLanguage == .simplifiedChinese
+                ? "当前有 1 个活跃的告警条件"
+                : "1 alert condition is currently active"
         }
 
-        return "\(activeAlertTypes.count) alert conditions are currently active"
+        return resolvedLanguage == .simplifiedChinese
+            ? "当前有 \(activeAlertTypes.count) 个活跃的告警条件"
+            : "\(activeAlertTypes.count) alert conditions are currently active"
     }
 
     var recentAlertsText: String {
         if recentAlerts.isEmpty {
-            return "Recent alerts will appear here when a rule first becomes active"
+            return resolvedLanguage == .simplifiedChinese
+                ? "当某条规则首次触发时，最近告警会显示在这里"
+                : "Recent alerts will appear here when a rule first becomes active"
         }
 
         if recentAlerts.count == 1 {
-            return "1 recent alert"
+            return resolvedLanguage == .simplifiedChinese ? "1 条最近告警" : "1 recent alert"
         }
 
-        return "\(recentAlerts.count) recent alerts"
+        return resolvedLanguage == .simplifiedChinese
+            ? "\(recentAlerts.count) 条最近告警"
+            : "\(recentAlerts.count) recent alerts"
     }
 
     var cpuCoreCountText: String {
         if cpuCores.isEmpty {
-            return "Collecting per-core usage"
+            return resolvedLanguage == .simplifiedChinese ? "正在采集每核心使用率" : "Collecting per-core usage"
         }
 
         if cpuCores.count == 1 {
-            return "1 logical core"
+            return resolvedLanguage == .simplifiedChinese ? "1 个逻辑核心" : "1 logical core"
         }
 
-        return "\(cpuCores.count) logical cores"
+        return resolvedLanguage == .simplifiedChinese
+            ? "\(cpuCores.count) 个逻辑核心"
+            : "\(cpuCores.count) logical cores"
     }
 
     var cpuCoreTrendValues: [Double] {
@@ -224,7 +295,7 @@ final class AppState: ObservableObject {
 
     var memoryFootprintText: String {
         guard memoryTotalBytes > 0 else {
-            return "Collecting memory usage"
+            return resolvedLanguage == .simplifiedChinese ? "正在采集内存使用率" : "Collecting memory usage"
         }
 
         return "\(storageString(from: memoryUsedBytes)) / \(storageString(from: memoryTotalBytes))"
@@ -232,7 +303,7 @@ final class AppState: ObservableObject {
 
     var diskUsageText: String {
         guard diskTotalBytes > 0 else {
-            return "Collecting disk usage"
+            return resolvedLanguage == .simplifiedChinese ? "正在采集磁盘使用率" : "Collecting disk usage"
         }
 
         return percentageString(from: Double(diskUsedBytes) / Double(diskTotalBytes))
@@ -240,10 +311,12 @@ final class AppState: ObservableObject {
 
     var diskFootprintText: String {
         guard diskTotalBytes > 0 else {
-            return "Disk metrics will appear once sampled"
+            return resolvedLanguage == .simplifiedChinese ? "采样后会显示磁盘指标" : "Disk metrics will appear once sampled"
         }
 
-        return "\(storageString(from: diskUsedBytes)) / \(storageString(from: diskTotalBytes)) used"
+        return resolvedLanguage == .simplifiedChinese
+            ? "已用 \(storageString(from: diskUsedBytes)) / \(storageString(from: diskTotalBytes))"
+            : "\(storageString(from: diskUsedBytes)) / \(storageString(from: diskTotalBytes)) used"
     }
 
     var diskReadRateText: String {
@@ -255,7 +328,9 @@ final class AppState: ObservableObject {
     }
 
     var diskActivityText: String {
-        "Read \(diskReadRateText) • Write \(diskWriteRateText)"
+        resolvedLanguage == .simplifiedChinese
+            ? "读取 \(diskReadRateText) • 写入 \(diskWriteRateText)"
+            : "Read \(diskReadRateText) • Write \(diskWriteRateText)"
     }
 
     var downloadRateText: String {
@@ -268,19 +343,21 @@ final class AppState: ObservableObject {
 
     var networkStatusText: String {
         if activeNetworkInterfaces == 0 {
-            return "No active interfaces"
+            return resolvedLanguage == .simplifiedChinese ? "没有活动网络接口" : "No active interfaces"
         }
 
         if activeNetworkInterfaces == 1 {
-            return "1 active interface"
+            return resolvedLanguage == .simplifiedChinese ? "1 个活动网络接口" : "1 active interface"
         }
 
-        return "\(activeNetworkInterfaces) active interfaces"
+        return resolvedLanguage == .simplifiedChinese
+            ? "\(activeNetworkInterfaces) 个活动网络接口"
+            : "\(activeNetworkInterfaces) active interfaces"
     }
 
     var batteryStatusText: String {
         guard let batterySnapshot else {
-            return "No battery metrics"
+            return resolvedLanguage == .simplifiedChinese ? "没有电池指标" : "No battery metrics"
         }
 
         return percentageString(from: batterySnapshot.level)
@@ -288,16 +365,18 @@ final class AppState: ObservableObject {
 
     var batteryDetailText: String {
         guard let batterySnapshot else {
-            return "Battery metrics are unavailable on this Mac"
+            return resolvedLanguage == .simplifiedChinese
+                ? "这台 Mac 无法提供电池指标"
+                : "Battery metrics are unavailable on this Mac"
         }
 
         let powerText: String
         if batterySnapshot.isCharging {
-            powerText = "Charging"
+            powerText = resolvedLanguage == .simplifiedChinese ? "正在充电" : "Charging"
         } else if batterySnapshot.isOnBatteryPower {
-            powerText = "On battery power"
+            powerText = resolvedLanguage == .simplifiedChinese ? "使用电池供电" : "On battery power"
         } else {
-            powerText = "On AC power"
+            powerText = resolvedLanguage == .simplifiedChinese ? "使用交流电供电" : "On AC power"
         }
 
         guard let minutes = batterySnapshot.timeRemainingMinutes, minutes > 0 else {
@@ -305,26 +384,30 @@ final class AppState: ObservableObject {
         }
 
         if batterySnapshot.isCharging {
-            return "\(powerText) • \(durationString(fromMinutes: minutes)) to full"
+            return resolvedLanguage == .simplifiedChinese
+                ? "\(powerText) • 距离充满还有 \(durationString(fromMinutes: minutes))"
+                : "\(powerText) • \(durationString(fromMinutes: minutes)) to full"
         }
 
         if batterySnapshot.isOnBatteryPower {
-            return "\(powerText) • \(durationString(fromMinutes: minutes)) remaining"
+            return resolvedLanguage == .simplifiedChinese
+                ? "\(powerText) • 剩余 \(durationString(fromMinutes: minutes))"
+                : "\(powerText) • \(durationString(fromMinutes: minutes)) remaining"
         }
 
         return powerText
     }
 
     var thermalConditionText: String {
-        sensors.thermalCondition.title
+        sensors.thermalCondition.localizedTitle(language: appLanguage)
     }
 
     var thermalConditionDetailText: String {
-        sensors.thermalCondition.detailText
+        sensors.thermalCondition.localizedDetailText(language: appLanguage)
     }
 
     var sensorSourceText: String {
-        sensors.sourceDescription
+        sensors.source.localizedDescription(language: appLanguage)
     }
 
     var cpuTemperatureText: String {
@@ -343,34 +426,40 @@ final class AppState: ObservableObject {
         var unavailableSignals: [String] = []
 
         if sensors.cpuTemperatureCelsius == nil {
-            unavailableSignals.append("CPU temperature")
+            unavailableSignals.append(text(.cpuTemperature))
         }
 
         if sensors.gpuTemperatureCelsius == nil {
-            unavailableSignals.append("GPU temperature")
+            unavailableSignals.append(text(.gpuTemperature))
         }
 
         if sensors.fans.isEmpty {
-            unavailableSignals.append("fan telemetry")
+            unavailableSignals.append(resolvedLanguage == .simplifiedChinese ? "风扇数据" : "fan telemetry")
         }
 
         guard unavailableSignals.isEmpty == false else {
-            return "Live temperature and fan telemetry are available."
+            return resolvedLanguage == .simplifiedChinese
+                ? "实时温度和风扇数据可用。"
+                : "Live temperature and fan telemetry are available."
         }
 
-        return unavailableSignals.joined(separator: ", ") + " currently unavailable."
+        return resolvedLanguage == .simplifiedChinese
+            ? unavailableSignals.joined(separator: "、") + " 当前不可用。"
+            : unavailableSignals.joined(separator: ", ") + " currently unavailable."
     }
 
     var fanStatusText: String {
         if sensors.fans.isEmpty {
-            return "Fan telemetry unavailable"
+            return resolvedLanguage == .simplifiedChinese ? "风扇数据不可用" : "Fan telemetry unavailable"
         }
 
         if sensors.fans.count == 1 {
-            return "1 fan reporting"
+            return resolvedLanguage == .simplifiedChinese ? "1 个风扇正在上报" : "1 fan reporting"
         }
 
-        return "\(sensors.fans.count) fans reporting"
+        return resolvedLanguage == .simplifiedChinese
+            ? "\(sensors.fans.count) 个风扇正在上报"
+            : "\(sensors.fans.count) fans reporting"
     }
 
     func fanSpeedText(for fan: FanSnapshot) -> String {
@@ -380,7 +469,7 @@ final class AppState: ObservableObject {
     func fanRangeText(for fan: FanSnapshot) -> String {
         guard let minimumRPM = fan.minimumRPM,
               let maximumRPM = fan.maximumRPM else {
-            return "Range unavailable"
+            return resolvedLanguage == .simplifiedChinese ? "范围不可用" : "Range unavailable"
         }
 
         return "\(minimumRPM)-\(maximumRPM) RPM"
@@ -388,14 +477,16 @@ final class AppState: ObservableObject {
 
     var runningAppsText: String {
         if processes.isEmpty {
-            return "No visible apps"
+            return text(.noVisibleApps)
         }
 
         if processes.count == 1 {
-            return "1 visible app"
+            return resolvedLanguage == .simplifiedChinese ? "1 个可见应用" : "1 visible app"
         }
 
-        return "\(processes.count) visible apps"
+        return resolvedLanguage == .simplifiedChinese
+            ? "\(processes.count) 个可见应用"
+            : "\(processes.count) visible apps"
     }
 
     var historySummaryText: String {
@@ -411,10 +502,14 @@ final class AppState: ObservableObject {
         let dayCount = dayHistorySamples.count
 
         if recentCount == 0, dayCount == 0 {
-            return "History populates after the first successful samples"
+            return resolvedLanguage == .simplifiedChinese
+                ? "首次采样成功后会开始积累历史记录"
+                : "History populates after the first successful samples"
         }
 
-        return "\(recentCount) live samples and \(dayCount) minute buckets"
+        return resolvedLanguage == .simplifiedChinese
+            ? "\(recentCount) 条实时样本和 \(dayCount) 个分钟桶"
+            : "\(recentCount) live samples and \(dayCount) minute buckets"
     }
 
     var cpuTrendValues: [Double] {
@@ -445,7 +540,31 @@ final class AppState: ObservableObject {
         return "\(twoDigitString(hour)):\(twoDigitString(minute))"
     }
 
+    var platformArchitectureText: String {
+        switch (resolvedLanguage, PlatformCapabilities.current.architecture) {
+        case (.system, .appleSilicon):
+            return "Apple Silicon"
+        case (.system, .intel):
+            return "Intel"
+        case (.simplifiedChinese, .appleSilicon):
+            return "Apple Silicon"
+        case (.simplifiedChinese, .intel):
+            return "Intel"
+        case (.english, .appleSilicon):
+            return "Apple Silicon"
+        case (.english, .intel):
+            return "Intel"
+        }
+    }
+
     func loadPersistedState() async {
+        if let storedAppLanguage = await settingsStore.codableValue(
+            for: .appLanguage,
+            as: AppLanguage.self
+        ) {
+            appLanguage = storedAppLanguage
+        }
+
         if let storedMenuBarPresentation = await settingsStore.codableValue(
             for: .menuBarPresentation,
             as: MenuBarPresentation.self
@@ -475,6 +594,14 @@ final class AppState: ObservableObject {
     func setMenuBarTextMode(_ value: MenuBarTextMode) {
         updateMenuBarPresentation { presentation in
             presentation.textMode = value
+        }
+    }
+
+    func setAppLanguage(_ value: AppLanguage) {
+        appLanguage = value
+
+        Task {
+            await settingsStore.set(value, for: .appLanguage)
         }
     }
 
@@ -552,7 +679,11 @@ final class AppState: ObservableObject {
             launchAtLoginErrorMessage = nil
         } catch {
             launchAtLoginStatus = launchAtLoginService.status()
-            launchAtLoginErrorMessage = error.localizedDescription
+            if let launchAtLoginError = error as? LaunchAtLoginError {
+                launchAtLoginErrorMessage = launchAtLoginError.description(language: appLanguage)
+            } else {
+                launchAtLoginErrorMessage = error.localizedDescription
+            }
         }
     }
 
@@ -628,23 +759,30 @@ final class AppState: ObservableObject {
         case .diskActivity:
             rateString(from: diskReadBytesPerSecond + diskWriteBytesPerSecond)
         case .batteryLevel:
-            batterySnapshot == nil ? "n/a" : batteryStatusText
+            batterySnapshot == nil ? (resolvedLanguage == .simplifiedChinese ? "无" : "n/a") : batteryStatusText
         }
     }
 
     func historySummaryText(for samples: [MetricHistorySample]) -> String {
         guard let firstSample = samples.first,
               let lastSample = samples.last else {
-            return "History populates after the first successful samples"
+            return resolvedLanguage == .simplifiedChinese
+                ? "首次采样成功后会开始积累历史记录"
+                : "History populates after the first successful samples"
         }
 
         let interval = max(lastSample.timestamp.timeIntervalSince(firstSample.timestamp), 0)
 
         if interval < 60 {
-            return "\(samples.count) samples across \(Int(interval.rounded()))s"
+            return resolvedLanguage == .simplifiedChinese
+                ? "\(samples.count) 条样本，跨度 \(Int(interval.rounded())) 秒"
+                : "\(samples.count) samples across \(Int(interval.rounded()))s"
         }
 
-        return "\(samples.count) samples across \(durationString(fromMinutes: Int((interval / 60).rounded())))"
+        let duration = durationString(fromMinutes: Int((interval / 60).rounded()))
+        return resolvedLanguage == .simplifiedChinese
+            ? "\(samples.count) 条样本，跨度 \(duration)"
+            : "\(samples.count) samples across \(duration)"
     }
 
     private func updateAlertConfiguration(
@@ -707,14 +845,16 @@ final class AppState: ObservableObject {
         let remainingMinutes = minutes % 60
 
         if hours == 0 {
-            return "\(remainingMinutes)m"
+            return resolvedLanguage == .simplifiedChinese ? "\(remainingMinutes) 分钟" : "\(remainingMinutes)m"
         }
 
         if remainingMinutes == 0 {
-            return "\(hours)h"
+            return resolvedLanguage == .simplifiedChinese ? "\(hours) 小时" : "\(hours)h"
         }
 
-        return "\(hours)h \(remainingMinutes)m"
+        return resolvedLanguage == .simplifiedChinese
+            ? "\(hours) 小时 \(remainingMinutes) 分钟"
+            : "\(hours)h \(remainingMinutes)m"
     }
 
     private func rateString(from bytesPerSecond: UInt64) -> String {
@@ -733,7 +873,7 @@ final class AppState: ObservableObject {
 
     private func temperatureString(from value: Double?) -> String {
         guard let value else {
-            return "Unavailable"
+            return text(.unavailable)
         }
 
         return "\(decimalString(from: value)) C"

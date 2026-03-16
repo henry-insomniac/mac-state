@@ -8,8 +8,22 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section {
+                Picker(
+                    appState.text(.language),
+                    selection: Binding(
+                        get: { appState.appLanguage },
+                        set: { appState.setAppLanguage($0) }
+                    )
+                ) {
+                    ForEach(AppLanguage.allCases, id: \.self) { language in
+                        Text(appState.languageDisplayName(language)).tag(language)
+                    }
+                }
+            }
+
+            Section {
                 Toggle(
-                    "Launch mac-state at login",
+                    appState.text(.launchAtLogin),
                     isOn: Binding(
                         get: { appState.launchAtLoginStatus.isEnabled },
                         set: { appState.setLaunchAtLoginEnabled($0) }
@@ -31,52 +45,52 @@ struct SettingsView: View {
                 Button {
                     appState.refreshLaunchAtLoginStatus()
                 } label: {
-                    Label("Refresh Launch at Login Status", systemImage: "arrow.clockwise")
+                    Label(appState.text(.refreshLaunchAtLoginStatus), systemImage: "arrow.clockwise")
                 }
             }
 
             Section {
                 Picker(
-                    "Menu bar text",
+                    appState.text(.menuBarText),
                     selection: Binding(
                         get: { appState.menuBarPresentation.textMode },
                         set: { appState.setMenuBarTextMode($0) }
                     )
                 ) {
                     ForEach(MenuBarTextMode.allCases, id: \.self) { textMode in
-                        Text(textMode.title).tag(textMode)
+                        Text(appState.menuBarTextModeTitle(textMode)).tag(textMode)
                     }
                 }
 
                 Picker(
-                    "Primary metric",
+                    appState.text(.primaryMetric),
                     selection: Binding(
                         get: { appState.menuBarPresentation.primaryMetric },
                         set: { appState.setMenuBarPrimaryMetric($0) }
                     )
                 ) {
                     ForEach(MenuBarPrimaryMetric.allCases, id: \.self) { metric in
-                        Text(metric.title).tag(metric)
+                        Text(appState.menuBarPrimaryMetricTitle(metric)).tag(metric)
                     }
                 }
 
                 Text(appState.menuBarSettingsSummaryText)
                     .foregroundColor(.secondary)
 
-                Text("Preview: \(appState.menuBarPreviewText) · \(appState.menuBarMetricTitle)")
+                Text("\(appState.text(.preview)): \(appState.menuBarPreviewText) · \(appState.menuBarMetricTitle)")
                     .foregroundColor(.secondary)
             }
 
             Section {
                 Toggle(
-                    "Alert when CPU usage is high",
+                    appState.text(.alertWhenCPUUsageHigh),
                     isOn: Binding(
                         get: { appState.alertConfiguration.cpuHighUsage.isEnabled },
                         set: { appState.setCPUAlertEnabled($0) }
                     )
                 )
                 Stepper(
-                    "CPU threshold: \(appState.alertConfiguration.cpuHighUsage.thresholdPercent)%",
+                    "\(appState.text(.cpuThreshold)): \(appState.alertConfiguration.cpuHighUsage.thresholdPercent)%",
                     value: Binding(
                         get: { appState.alertConfiguration.cpuHighUsage.thresholdPercent },
                         set: { appState.setCPUAlertThreshold($0) }
@@ -85,14 +99,14 @@ struct SettingsView: View {
                 )
 
                 Toggle(
-                    "Alert when memory usage is high",
+                    appState.text(.alertWhenMemoryUsageHigh),
                     isOn: Binding(
                         get: { appState.alertConfiguration.memoryHighUsage.isEnabled },
                         set: { appState.setMemoryAlertEnabled($0) }
                     )
                 )
                 Stepper(
-                    "Memory threshold: \(appState.alertConfiguration.memoryHighUsage.thresholdPercent)%",
+                    "\(appState.text(.memoryThreshold)): \(appState.alertConfiguration.memoryHighUsage.thresholdPercent)%",
                     value: Binding(
                         get: { appState.alertConfiguration.memoryHighUsage.thresholdPercent },
                         set: { appState.setMemoryAlertThreshold($0) }
@@ -101,14 +115,14 @@ struct SettingsView: View {
                 )
 
                 Toggle(
-                    "Alert when battery is low",
+                    appState.text(.alertWhenBatteryLow),
                     isOn: Binding(
                         get: { appState.alertConfiguration.batteryLowLevel.isEnabled },
                         set: { appState.setBatteryAlertEnabled($0) }
                     )
                 )
                 Stepper(
-                    "Battery threshold: \(appState.alertConfiguration.batteryLowLevel.thresholdPercent)%",
+                    "\(appState.text(.batteryThreshold)): \(appState.alertConfiguration.batteryLowLevel.thresholdPercent)%",
                     value: Binding(
                         get: { appState.alertConfiguration.batteryLowLevel.thresholdPercent },
                         set: { appState.setBatteryAlertThreshold($0) }
@@ -117,14 +131,14 @@ struct SettingsView: View {
                 )
 
                 Toggle(
-                    "Alert when disk activity is high",
+                    appState.text(.alertWhenDiskActivityHigh),
                     isOn: Binding(
                         get: { appState.alertConfiguration.diskActivityHigh.isEnabled },
                         set: { appState.setDiskAlertEnabled($0) }
                     )
                 )
                 Stepper(
-                    "Disk threshold: \(appState.alertConfiguration.diskActivityHigh.thresholdMegabytesPerSecond) MB/s",
+                    "\(appState.text(.diskThreshold)): \(appState.alertConfiguration.diskActivityHigh.thresholdMegabytesPerSecond) MB/s",
                     value: Binding(
                         get: { appState.alertConfiguration.diskActivityHigh.thresholdMegabytesPerSecond },
                         set: { appState.setDiskAlertThreshold($0) }
@@ -134,7 +148,7 @@ struct SettingsView: View {
                 )
 
                 Stepper(
-                    "Alert cooldown: \(appState.alertConfiguration.clampedCooldownMinutes) minutes",
+                    "\(appState.text(.alertCooldown)): \(appState.alertConfiguration.clampedCooldownMinutes) \(appState.resolvedLanguage == .simplifiedChinese ? "分钟" : "minutes")",
                     value: Binding(
                         get: { appState.alertConfiguration.clampedCooldownMinutes },
                         set: { appState.setAlertCooldownMinutes($0) }
@@ -142,7 +156,7 @@ struct SettingsView: View {
                     in: 1...60
                 )
 
-                Text("Alerts use local notifications after notification permission is granted.")
+                Text(appState.text(.alertsUseLocalNotifications))
                     .foregroundColor(.secondary)
                 Text(appState.alertsSummaryText)
                     .foregroundColor(.secondary)
@@ -152,52 +166,52 @@ struct SettingsView: View {
                 Button {
                     refreshMetrics()
                 } label: {
-                    Label("Refresh Metrics", systemImage: "arrow.clockwise")
+                    Label(appState.text(.refreshMetrics), systemImage: "arrow.clockwise")
                 }
 
-                Text("Current architecture: \(appState.platformSummary)")
+                Text("\(appState.text(.currentArchitecture)): \(appState.platformArchitectureText)")
                     .foregroundColor(.secondary)
 
-                Text("Disk footprint: \(appState.diskFootprintText)")
+                Text("\(appState.text(.diskFootprint)): \(appState.diskFootprintText)")
                     .foregroundColor(.secondary)
 
-                Text("Disk activity: \(appState.diskActivityText)")
+                Text("\(appState.text(.diskActivityLabel)): \(appState.diskActivityText)")
                     .foregroundColor(.secondary)
 
-                Text("Battery: \(appState.batteryDetailText)")
+                Text("\(appState.text(.batteryLabelWithColon)): \(appState.batteryDetailText)")
                     .foregroundColor(.secondary)
 
-                Text("Thermal condition: \(appState.thermalConditionText)")
+                Text("\(appState.text(.thermalCondition)): \(appState.thermalConditionText)")
                     .foregroundColor(.secondary)
 
-                Text("Sensor source: \(appState.sensorSourceText)")
+                Text("\(appState.text(.sensorSource)): \(appState.sensorSourceText)")
                     .foregroundColor(.secondary)
 
-                Text("CPU temperature: \(appState.cpuTemperatureText)")
+                Text("\(appState.text(.cpuTemperature)): \(appState.cpuTemperatureText)")
                     .foregroundColor(.secondary)
 
-                Text("GPU temperature: \(appState.gpuTemperatureText)")
+                Text("\(appState.text(.gpuTemperature)): \(appState.gpuTemperatureText)")
                     .foregroundColor(.secondary)
 
-                Text("Battery temperature: \(appState.batteryTemperatureText)")
+                Text("\(appState.text(.batteryTemperature)): \(appState.batteryTemperatureText)")
                     .foregroundColor(.secondary)
 
-                Text("Cooling: \(appState.fanStatusText)")
+                Text("\(appState.text(.cooling)): \(appState.fanStatusText)")
                     .foregroundColor(.secondary)
 
                 Text(appState.sensorAvailabilityText)
                     .foregroundColor(.secondary)
 
-                Text("Per-core CPU: \(appState.cpuCoreCountText)")
+                Text("\(appState.text(.perCoreCPU)): \(appState.cpuCoreCountText)")
                     .foregroundColor(.secondary)
 
-                Text("Dashboard app list: \(appState.runningAppsText)")
+                Text("\(appState.text(.dashboardAppList)): \(appState.runningAppsText)")
                     .foregroundColor(.secondary)
 
-                Text("Trend cache: \(appState.historyStorageSummaryText)")
+                Text("\(appState.text(.trendCache)): \(appState.historyStorageSummaryText)")
                     .foregroundColor(.secondary)
 
-                Text("Last updated \(appState.lastUpdatedText)")
+                Text("\(appState.text(.lastUpdated)) \(appState.lastUpdatedText)")
                     .foregroundColor(.secondary)
             }
         }
