@@ -6,6 +6,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var windowRouter = WindowRouter(appState: container.appState)
     private lazy var popoverController = PopoverController(
         appState: container.appState,
+        refreshMetrics: { [weak self] in
+            self?.container.metricsMonitor.refreshNow()
+        },
         openSettings: { [weak self] in
             self?.openSettings(nil)
         }
@@ -18,18 +21,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
         NSApp.mainMenu = makeMainMenu()
-        container.appState.start()
         statusItemController.start()
+        Task {
+            await container.appState.loadPersistedSettings()
+        }
+        container.metricsMonitor.start()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        container.appState.stop()
+        container.metricsMonitor.stop()
     }
 
     @objc
     private func openSettings(_ sender: Any?) {
         NSApp.activate(ignoringOtherApps: true)
-        windowRouter.showSettings()
+        windowRouter.showSettings(
+            refreshMetrics: { [weak self] in
+                self?.container.metricsMonitor.refreshNow()
+            }
+        )
     }
 
     @objc

@@ -3,6 +3,7 @@ import MacStateUI
 
 struct DashboardView: View {
     @ObservedObject var appState: AppState
+    let refreshMetrics: @MainActor () -> Void
     let openSettings: @MainActor () -> Void
 
     var body: some View {
@@ -33,6 +34,24 @@ struct DashboardView: View {
                         .foregroundColor(.secondary)
                 }
 
+                MetricCard("Disk") {
+                    Text(appState.diskUsageText)
+                        .font(.title2)
+                        .bold()
+
+                    Text(appState.diskFootprintText)
+                        .foregroundColor(.secondary)
+                }
+
+                MetricCard("Battery") {
+                    Text(appState.batteryStatusText)
+                        .font(.title2)
+                        .bold()
+
+                    Text(appState.batteryDetailText)
+                        .foregroundColor(.secondary)
+                }
+
                 MetricCard("Network") {
                     Text(appState.downloadRateText)
                         .font(.title2)
@@ -40,6 +59,36 @@ struct DashboardView: View {
 
                     Text("Upload \(appState.uploadRateText) • \(appState.networkStatusText)")
                         .foregroundColor(.secondary)
+                }
+
+                MetricCard("Running Apps") {
+                    Text(appState.runningAppsText)
+                        .font(.title3)
+                        .bold()
+
+                    if appState.processes.isEmpty {
+                        Text("Visible apps will appear after the first process scan.")
+                            .foregroundColor(.secondary)
+                    } else {
+                        VStack(alignment: .leading, spacing: 8) {
+                            ForEach(appState.processes) { process in
+                                HStack(alignment: .firstTextBaseline) {
+                                    Text(process.name)
+                                        .lineLimit(1)
+
+                                    Spacer()
+
+                                    if process.isFrontmost {
+                                        Text("Frontmost")
+                                            .foregroundColor(.secondary)
+                                    } else {
+                                        Text("PID \(process.pid)")
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 Text("Last updated \(appState.lastUpdatedText)")
@@ -52,7 +101,7 @@ struct DashboardView: View {
                 }
 
                 Button {
-                    appState.refreshNow()
+                    refreshMetrics()
                 } label: {
                     Label("Refresh Metrics", systemImage: "arrow.clockwise")
                 }
@@ -66,6 +115,6 @@ struct DashboardView: View {
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(width: 360, height: 420)
+        .frame(width: 380, height: 560)
     }
 }

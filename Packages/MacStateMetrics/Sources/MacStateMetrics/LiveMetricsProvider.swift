@@ -1,11 +1,14 @@
+import AppKit
 import Darwin
 import Foundation
+import IOKit.ps
 import MacStateFoundation
 
 public enum MetricsSamplingError: Error {
     case cpuCountersUnavailable(code: Int32)
     case memoryCountersUnavailable(code: Int32)
     case networkCountersUnavailable(code: Int32)
+    case diskCountersUnavailable
 }
 
 struct CPULoadCounters: Equatable {
@@ -84,7 +87,10 @@ public actor LiveMetricsProvider: MetricsSnapshotProviding {
         let timestamp = Date()
         let currentCPULoad = try Self.readCPULoadCounters()
         let memoryCounters = try Self.readMemoryCounters()
+        let diskCounters = try Self.readDiskCounters()
         let currentNetworkCounters = try Self.readNetworkCounters(at: timestamp)
+        let battery = Self.readBatterySnapshot()
+        let processes = Self.readProcessSnapshots()
 
         let cpuUsage = currentCPULoad.usage(since: previousCPULoad)
         let networkRates = currentNetworkCounters.rates(since: previousNetworkCounters)
@@ -98,9 +104,12 @@ public actor LiveMetricsProvider: MetricsSnapshotProviding {
             memoryUsage: memoryCounters.usage,
             memoryUsedBytes: memoryCounters.usedBytes,
             memoryTotalBytes: memoryCounters.totalBytes,
+            disk: diskCounters,
             networkDownloadBytesPerSecond: networkRates.download,
             networkUploadBytesPerSecond: networkRates.upload,
             activeNetworkInterfaces: currentNetworkCounters.activeInterfaces,
+            battery: battery,
+            processes: processes,
             platform: .current
         )
     }
@@ -229,5 +238,88 @@ private extension LiveMetricsProvider {
             sentBytes: totalSentBytes,
             activeInterfaces: activeInterfaceNames.count
         )
+    }
+
+    static func readDiskCounters() throws -> DiskSnapshot {
+        let fileSystemAttributes = try FileManager.default.attributesOfFileSystem(forPath: NSHomeDirectory())
+
+        guard let totalBytesNumber = fileSystemAttributes[.systemSize] as? NSNumber,
+              let freeBytesNumber = fileSystemAttributes[.systemFreeSize] as? NSNumber else {
+            throw MetricsSamplingError.diskCountersUnavailable
+        }
+
+        let totalBytes = totalBytesNumber.uint64Value
+        let freeBytes = freeBytesNumber.uint64Value
+        let usedBytes = totalBytes > freeBytes ? totalBytes - freeBytes : 0
+
+        return DiskSnapshot(
+            usedBytes: usedBytes,
+            freeBytes: freeBytes,
+            totalBytes: totalBytes
+        )
+    }
+
+    static func readBatterySnapshot() -> BatterySnapshot? {
+        guard let powerSourcesInfo = IOPSCopyPowerSourcesInfo()?.takeRetainedValue() else {
+            return nil
+        }
+
+        let powerSources = IOPSCopyPowerSourcesList(powerSourcesInfo).takeRetainedValue() as NSArray
+
+        guard let firstPowerSource = powerSources.firstObject,
+              let description = IOPSGetPowerSourceDescription(
+                powerSourcesInfo,
+                firstPowerSource as CFTypeRef
+              )?.takeUnretainedValue() as NSDictionary? else {
+            return nil
+        }
+
+        let currentCapacity = description[kIOPSCurrentCapacityKey] as? Int ?? 0
+        let maxCapacity = description[kIOPSMaxCapacityKey] as? Int ?? 0
+        let isCharging = description[kIOPSIsChargingKey] as? Bool ?? false
+        let powerSourceState = description[kIOPSPowerSourceStateKey] as? String ?? ""
+        let isOnBatteryPower = powerSourceState == kIOPSBatteryPowerValue
+
+        let timeRemainingMinutes: Int?
+        if isCharging {
+            timeRemainingMinutes = description[kIOPSTimeToFullChargeKey] as? Int
+        } else if isOnBatteryPower {
+            timeRemainingMinutes = description[kIOPSTimeToEmptyKey] as? Int
+        } else {
+            timeRemainingMinutes = nil
+        }
+
+        return BatterySnapshot(
+            currentCapacity: currentCapacity,
+            maxCapacity: maxCapacity,
+            isCharging: isCharging,
+            isOnBatteryPower: isOnBatteryPower,
+            timeRemainingMinutes: timeRemainingMinutes
+        )
+    }
+
+    static func readProcessSnapshots() -> [ProcessSnapshot] {
+        let applications = NSWorkspace.shared.runningApplications
+
+        return applications
+            .filter { application in
+                application.activationPolicy != .prohibited && application.processIdentifier > 0
+            }
+            .map { application in
+                ProcessSnapshot(
+                    pid: application.processIdentifier,
+                    name: application.localizedName ?? "PID \(application.processIdentifier)",
+                    isFrontmost: application.isActive
+                )
+            }
+            .sorted { left, right in
+                if left.isFrontmost != right.isFrontmost {
+                    return left.isFrontmost && !right.isFrontmost
+                }
+
+                return left.name.localizedStandardCompare(right.name) == .orderedAscending
+            }
+            .prefix(5)
+            .map { $0 }
     }
 }

@@ -7,16 +7,18 @@ final class PopoverController {
 
     init(
         appState: AppState,
+        refreshMetrics: @escaping @MainActor () -> Void,
         openSettings: @escaping @MainActor () -> Void
     ) {
         let dashboardView = DashboardView(
             appState: appState,
+            refreshMetrics: refreshMetrics,
             openSettings: openSettings
         )
 
         popover = NSPopover()
         popover.behavior = .transient
-        popover.contentSize = NSSize(width: 360, height: 420)
+        popover.contentSize = NSSize(width: 380, height: 560)
         popover.contentViewController = NSHostingController(rootView: dashboardView)
     }
 

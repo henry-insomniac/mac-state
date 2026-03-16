@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var appState: AppState
+    let refreshMetrics: @MainActor () -> Void
 
     var body: some View {
         Form {
@@ -17,7 +18,7 @@ struct SettingsView: View {
                 .foregroundColor(.secondary)
 
             Button {
-                appState.refreshNow()
+                refreshMetrics()
             } label: {
                 Label("Refresh Metrics", systemImage: "arrow.clockwise")
             }
@@ -25,10 +26,19 @@ struct SettingsView: View {
             Text("Current architecture: \(appState.platformSummary)")
                 .foregroundColor(.secondary)
 
+            Text("Disk footprint: \(appState.diskFootprintText)")
+                .foregroundColor(.secondary)
+
+            Text("Battery: \(appState.batteryDetailText)")
+                .foregroundColor(.secondary)
+
+            Text("Dashboard app list: \(appState.runningAppsText)")
+                .foregroundColor(.secondary)
+
             Text("Last updated \(appState.lastUpdatedText)")
                 .foregroundColor(.secondary)
         }
         .padding()
-        .frame(minWidth: 380, minHeight: 240)
+        .frame(minWidth: 420, minHeight: 280)
     }
 }

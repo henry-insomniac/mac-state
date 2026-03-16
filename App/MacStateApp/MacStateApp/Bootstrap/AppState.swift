@@ -10,23 +10,22 @@ final class AppState: ObservableObject {
     @Published private(set) var memoryUsage = 0.0
     @Published private(set) var memoryUsedBytes: UInt64 = 0
     @Published private(set) var memoryTotalBytes: UInt64 = 0
+    @Published private(set) var diskUsedBytes: UInt64 = 0
+    @Published private(set) var diskFreeBytes: UInt64 = 0
+    @Published private(set) var diskTotalBytes: UInt64 = 0
     @Published private(set) var networkDownloadBytesPerSecond: UInt64 = 0
     @Published private(set) var networkUploadBytesPerSecond: UInt64 = 0
     @Published private(set) var activeNetworkInterfaces = 0
+    @Published private(set) var batterySnapshot: BatterySnapshot?
+    @Published private(set) var processes: [ProcessSnapshot] = []
     @Published private(set) var platformSummary = "Detecting..."
     @Published private(set) var lastUpdatedAt = Date()
     @Published private(set) var errorMessage: String?
 
     private let settingsStore: SettingsStore
-    private let metricsProvider: any MetricsSnapshotProviding
-    private var refreshTask: Task<Void, Never>?
 
-    init(
-        settingsStore: SettingsStore = SettingsStore(),
-        metricsProvider: any MetricsSnapshotProviding = LiveMetricsProvider()
-    ) {
+    init(settingsStore: SettingsStore = SettingsStore()) {
         self.settingsStore = settingsStore
-        self.metricsProvider = metricsProvider
     }
 
     var menuBarTitle: String {
@@ -50,10 +49,23 @@ final class AppState: ObservableObject {
             return "Collecting memory usage"
         }
 
-        let usedGigabytes = Double(memoryUsedBytes) / 1_073_741_824
-        let totalGigabytes = Double(memoryTotalBytes) / 1_073_741_824
+        return "\(storageString(from: memoryUsedBytes)) / \(storageString(from: memoryTotalBytes))"
+    }
 
-        return "\(singleDecimalString(from: usedGigabytes)) / \(singleDecimalString(from: totalGigabytes)) GB"
+    var diskUsageText: String {
+        guard diskTotalBytes > 0 else {
+            return "Collecting disk usage"
+        }
+
+        return percentageString(from: Double(diskUsedBytes) / Double(diskTotalBytes))
+    }
+
+    var diskFootprintText: String {
+        guard diskTotalBytes > 0 else {
+            return "Disk metrics will appear once sampled"
+        }
+
+        return "\(storageString(from: diskUsedBytes)) / \(storageString(from: diskTotalBytes)) used"
     }
 
     var downloadRateText: String {
@@ -76,6 +88,55 @@ final class AppState: ObservableObject {
         return "\(activeNetworkInterfaces) active interfaces"
     }
 
+    var batteryStatusText: String {
+        guard let batterySnapshot else {
+            return "No battery metrics"
+        }
+
+        return percentageString(from: batterySnapshot.level)
+    }
+
+    var batteryDetailText: String {
+        guard let batterySnapshot else {
+            return "Battery metrics are unavailable on this Mac"
+        }
+
+        let powerText: String
+        if batterySnapshot.isCharging {
+            powerText = "Charging"
+        } else if batterySnapshot.isOnBatteryPower {
+            powerText = "On battery power"
+        } else {
+            powerText = "On AC power"
+        }
+
+        guard let minutes = batterySnapshot.timeRemainingMinutes, minutes > 0 else {
+            return powerText
+        }
+
+        if batterySnapshot.isCharging {
+            return "\(powerText) • \(durationString(fromMinutes: minutes)) to full"
+        }
+
+        if batterySnapshot.isOnBatteryPower {
+            return "\(powerText) • \(durationString(fromMinutes: minutes)) remaining"
+        }
+
+        return powerText
+    }
+
+    var runningAppsText: String {
+        if processes.isEmpty {
+            return "No visible apps"
+        }
+
+        if processes.count == 1 {
+            return "1 visible app"
+        }
+
+        return "\(processes.count) visible apps"
+    }
+
     var lastUpdatedText: String {
         let components = Calendar.current.dateComponents([.hour, .minute], from: lastUpdatedAt)
         let hour = components.hour ?? 0
@@ -84,35 +145,8 @@ final class AppState: ObservableObject {
         return "\(twoDigitString(hour)):\(twoDigitString(minute))"
     }
 
-    func start() {
-        guard refreshTask == nil else {
-            return
-        }
-
-        refreshTask = Task { [weak self] in
-            guard let self else {
-                return
-            }
-
-            self.compactMenuBarText = await settingsStore.bool(for: .compactMenuBarText)
-            await self.refreshMetrics()
-
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 2_000_000_000)
-                await self.refreshMetrics()
-            }
-        }
-    }
-
-    func stop() {
-        refreshTask?.cancel()
-        refreshTask = nil
-    }
-
-    func refreshNow() {
-        Task {
-            await refreshMetrics()
-        }
+    func loadPersistedSettings() async {
+        compactMenuBarText = await settingsStore.bool(for: .compactMenuBarText)
     }
 
     func setCompactMenuBarText(_ value: Bool) {
@@ -123,26 +157,25 @@ final class AppState: ObservableObject {
         }
     }
 
-    private func refreshMetrics() async {
-        do {
-            let snapshot = try await metricsProvider.snapshot()
-            apply(snapshot)
-            errorMessage = nil
-        } catch {
-            errorMessage = "Unable to read system metrics"
-        }
-    }
-
-    private func apply(_ snapshot: MetricSnapshot) {
+    func apply(_ snapshot: MetricSnapshot) {
         cpuUsage = snapshot.cpuUsage
         memoryUsage = snapshot.memoryUsage
         memoryUsedBytes = snapshot.memoryUsedBytes
         memoryTotalBytes = snapshot.memoryTotalBytes
+        diskUsedBytes = snapshot.disk.usedBytes
+        diskFreeBytes = snapshot.disk.freeBytes
+        diskTotalBytes = snapshot.disk.totalBytes
         networkDownloadBytesPerSecond = snapshot.networkDownloadBytesPerSecond
         networkUploadBytesPerSecond = snapshot.networkUploadBytesPerSecond
         activeNetworkInterfaces = snapshot.activeNetworkInterfaces
+        batterySnapshot = snapshot.battery
+        processes = snapshot.processes
         platformSummary = snapshot.platform.architecture.rawValue
         lastUpdatedAt = snapshot.timestamp
+    }
+
+    func setErrorMessage(_ message: String?) {
+        errorMessage = message
     }
 
     private func percentageString(from value: Double) -> String {
@@ -150,23 +183,55 @@ final class AppState: ObservableObject {
         return "\(percentage)%"
     }
 
-    private func singleDecimalString(from value: Double) -> String {
+    private func decimalString(from value: Double) -> String {
         let roundedValue = (value * 10).rounded() / 10
-        let wholePart = Int(roundedValue)
+        let wholePart = Int(roundedValue.rounded(.towardZero))
         let decimalPart = Int(abs((roundedValue - Double(wholePart)) * 10).rounded())
 
         return "\(wholePart).\(decimalPart)"
+    }
+
+    private func storageString(from bytes: UInt64) -> String {
+        let units = ["B", "KB", "MB", "GB", "TB"]
+        var scaledValue = Double(bytes)
+        var unitIndex = 0
+
+        while scaledValue >= 1_024 && unitIndex < units.count - 1 {
+            scaledValue /= 1_024
+            unitIndex += 1
+        }
+
+        if unitIndex == 0 {
+            return "\(bytes) \(units[unitIndex])"
+        }
+
+        return "\(decimalString(from: scaledValue)) \(units[unitIndex])"
+    }
+
+    private func durationString(fromMinutes minutes: Int) -> String {
+        let hours = minutes / 60
+        let remainingMinutes = minutes % 60
+
+        if hours == 0 {
+            return "\(remainingMinutes)m"
+        }
+
+        if remainingMinutes == 0 {
+            return "\(hours)h"
+        }
+
+        return "\(hours)h \(remainingMinutes)m"
     }
 
     private func rateString(from bytesPerSecond: UInt64) -> String {
         let bytes = Double(bytesPerSecond)
 
         if bytes >= 1_048_576 {
-            return "\(singleDecimalString(from: bytes / 1_048_576)) MB/s"
+            return "\(decimalString(from: bytes / 1_048_576)) MB/s"
         }
 
         if bytes >= 1_024 {
-            return "\(singleDecimalString(from: bytes / 1_024)) KB/s"
+            return "\(decimalString(from: bytes / 1_024)) KB/s"
         }
 
         return "\(bytesPerSecond) B/s"

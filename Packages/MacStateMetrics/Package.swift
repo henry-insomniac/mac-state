@@ -22,6 +22,10 @@ let package = Package(
             name: "MacStateMetrics",
             dependencies: [
                 .product(name: "MacStateFoundation", package: "MacStateFoundation"),
+            ],
+            linkerSettings: [
+                .linkedFramework("AppKit"),
+                .linkedFramework("IOKit"),
             ]
         ),
         .testTarget(

@@ -10,8 +10,12 @@ import Foundation
     #expect(snapshot.memoryUsage >= 0)
     #expect(snapshot.memoryUsage <= 1)
     #expect(snapshot.memoryUsedBytes <= snapshot.memoryTotalBytes)
+    #expect(snapshot.disk.usedBytes <= snapshot.disk.totalBytes)
+    #expect(snapshot.disk.freeBytes <= snapshot.disk.totalBytes)
     #expect(snapshot.networkDownloadBytesPerSecond >= 0)
     #expect(snapshot.networkUploadBytesPerSecond >= 0)
+    #expect(snapshot.processes.isEmpty == false)
+    #expect(snapshot.battery?.level ?? 0 >= 0)
 }
 
 @Test func cpuUsageUsesDeltaBetweenSamples() {
