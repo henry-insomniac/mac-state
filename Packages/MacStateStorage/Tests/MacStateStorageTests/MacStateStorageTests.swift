@@ -44,3 +44,25 @@ import MacStateMetrics
 
     #expect(reloadedSamples == retained)
 }
+
+@Test func settingsStoreReadsCodableValuesThatWereWritten() async {
+    let defaults = UserDefaults(suiteName: #function)!
+    defaults.removePersistentDomain(forName: #function)
+    let store = SettingsStore(defaults: defaults)
+    let configuration = MetricAlertConfiguration(
+        cpuHighUsage: MetricAlertRule(isEnabled: true, thresholdPercent: 80),
+        memoryHighUsage: MetricAlertRule(isEnabled: false, thresholdPercent: 90),
+        batteryLowLevel: MetricAlertRule(isEnabled: true, thresholdPercent: 15),
+        diskActivityHigh: DiskActivityAlertRule(isEnabled: true, thresholdMegabytesPerSecond: 200),
+        cooldownMinutes: 12
+    )
+
+    await store.set(configuration, for: .alertConfiguration)
+
+    let restored = await store.codableValue(
+        for: .alertConfiguration,
+        as: MetricAlertConfiguration.self
+    )
+
+    #expect(restored == configuration)
+}

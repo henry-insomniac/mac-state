@@ -24,6 +24,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItemController.start()
         Task {
             await container.appState.loadPersistedState()
+            if container.appState.alertConfiguration.hasEnabledRules {
+                await container.alertNotificationService.requestAuthorizationIfNeeded()
+            }
             container.metricsMonitor.start()
         }
     }

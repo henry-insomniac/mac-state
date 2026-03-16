@@ -6,6 +6,7 @@ import MacStateStorage
 @MainActor
 final class AppState: ObservableObject {
     @Published var compactMenuBarText = true
+    @Published private(set) var alertConfiguration = MetricAlertConfiguration()
     @Published private(set) var cpuUsage = 0.0
     @Published private(set) var cpuCores: [CPUCoreSnapshot] = []
     @Published private(set) var memoryUsage = 0.0
@@ -47,6 +48,14 @@ final class AppState: ObservableObject {
 
     var cpuUsageText: String {
         percentageString(from: cpuUsage)
+    }
+
+    var alertsSummaryText: String {
+        if alertConfiguration.hasEnabledRules == false {
+            return "All alerts are disabled"
+        }
+
+        return "Cooldown \(alertConfiguration.clampedCooldownMinutes)m"
     }
 
     var cpuCoreCountText: String {
@@ -223,6 +232,12 @@ final class AppState: ObservableObject {
 
     func loadPersistedState() async {
         compactMenuBarText = await settingsStore.bool(for: .compactMenuBarText)
+        if let restoredAlertConfiguration = await settingsStore.codableValue(
+            for: .alertConfiguration,
+            as: MetricAlertConfiguration.self
+        ) {
+            alertConfiguration = restoredAlertConfiguration
+        }
         historySamples = await historyStore.samples()
     }
 
@@ -231,6 +246,60 @@ final class AppState: ObservableObject {
 
         Task {
             await settingsStore.set(value, for: .compactMenuBarText)
+        }
+    }
+
+    func setCPUAlertEnabled(_ value: Bool) {
+        updateAlertConfiguration { configuration in
+            configuration.cpuHighUsage.isEnabled = value
+        }
+    }
+
+    func setCPUAlertThreshold(_ value: Int) {
+        updateAlertConfiguration { configuration in
+            configuration.cpuHighUsage.thresholdPercent = value
+        }
+    }
+
+    func setMemoryAlertEnabled(_ value: Bool) {
+        updateAlertConfiguration { configuration in
+            configuration.memoryHighUsage.isEnabled = value
+        }
+    }
+
+    func setMemoryAlertThreshold(_ value: Int) {
+        updateAlertConfiguration { configuration in
+            configuration.memoryHighUsage.thresholdPercent = value
+        }
+    }
+
+    func setBatteryAlertEnabled(_ value: Bool) {
+        updateAlertConfiguration { configuration in
+            configuration.batteryLowLevel.isEnabled = value
+        }
+    }
+
+    func setBatteryAlertThreshold(_ value: Int) {
+        updateAlertConfiguration { configuration in
+            configuration.batteryLowLevel.thresholdPercent = value
+        }
+    }
+
+    func setDiskAlertEnabled(_ value: Bool) {
+        updateAlertConfiguration { configuration in
+            configuration.diskActivityHigh.isEnabled = value
+        }
+    }
+
+    func setDiskAlertThreshold(_ value: Int) {
+        updateAlertConfiguration { configuration in
+            configuration.diskActivityHigh.thresholdMegabytesPerSecond = value
+        }
+    }
+
+    func setAlertCooldownMinutes(_ value: Int) {
+        updateAlertConfiguration { configuration in
+            configuration.cooldownMinutes = value
         }
     }
 
@@ -265,6 +334,17 @@ final class AppState: ObservableObject {
     private func percentageString(from value: Double) -> String {
         let percentage = Int((value * 100).rounded())
         return "\(percentage)%"
+    }
+
+    private func updateAlertConfiguration(
+        _ update: (inout MetricAlertConfiguration) -> Void
+    ) {
+        update(&alertConfiguration)
+        let alertConfiguration = self.alertConfiguration
+
+        Task {
+            await settingsStore.set(alertConfiguration, for: .alertConfiguration)
+        }
     }
 
     private func decimalString(from value: Double) -> String {

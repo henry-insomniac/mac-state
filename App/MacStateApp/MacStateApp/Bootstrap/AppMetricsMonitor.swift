@@ -7,16 +7,19 @@ final class AppMetricsMonitor {
     private let appState: AppState
     private let metricsProvider: any MetricsSnapshotProviding
     private let historyStore: MetricHistoryStore
+    private let alertNotificationService: AlertNotificationService
     private var refreshTask: Task<Void, Never>?
 
     init(
         appState: AppState,
         metricsProvider: any MetricsSnapshotProviding = LiveMetricsProvider(),
-        historyStore: MetricHistoryStore = MetricHistoryStore()
+        historyStore: MetricHistoryStore = MetricHistoryStore(),
+        alertNotificationService: AlertNotificationService = AlertNotificationService()
     ) {
         self.appState = appState
         self.metricsProvider = metricsProvider
         self.historyStore = historyStore
+        self.alertNotificationService = alertNotificationService
     }
 
     func start() {
@@ -66,9 +69,23 @@ final class AppMetricsMonitor {
         do {
             let snapshot = try await metricsProvider.snapshot()
             let historySamples = await historyStore.append(snapshot: snapshot)
+            let alertConfiguration = appState.alertConfiguration
+
             appState.apply(snapshot)
             appState.applyHistory(historySamples)
             appState.setErrorMessage(nil)
+
+            if alertConfiguration.hasEnabledRules {
+                await alertNotificationService.requestAuthorizationIfNeeded()
+                let alerts = MetricAlertEvaluator.alerts(
+                    for: snapshot,
+                    configuration: alertConfiguration
+                )
+                await alertNotificationService.deliver(
+                    alerts: alerts,
+                    cooldownMinutes: alertConfiguration.clampedCooldownMinutes
+                )
+            }
         } catch {
             appState.setErrorMessage("Unable to read system metrics")
         }

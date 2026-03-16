@@ -39,11 +39,13 @@
 
 ## Current status
 
-This repository currently contains the initial project bootstrap:
+This repository currently contains a working MVP foundation:
 
-- macOS app shell
-- menu bar controller and popover host
-- settings window
+- macOS app shell with menu bar controller and popover host
+- live CPU, per-core CPU, memory, disk, network, battery, and running app metrics
+- short-term metric history with lightweight persistence
+- configurable local alerts for CPU, memory, battery, and disk activity
+- settings window for compact mode and alert thresholds
 - local Swift packages with tests
 - project documentation and repository scaffolding
 
@@ -59,4 +61,3 @@ xcodebuild -project App/MacStateApp/MacStateApp.xcodeproj -target MacStateApp -c
 ## License
 
 No license file has been added yet. Add one before publishing releases or accepting external contributions.
-

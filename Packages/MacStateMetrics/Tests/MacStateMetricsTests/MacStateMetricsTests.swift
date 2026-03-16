@@ -1,6 +1,7 @@
 import Testing
 @testable import MacStateMetrics
 import Foundation
+import MacStateFoundation
 
 @Test func defaultSnapshotUsesExpectedRanges() {
     let snapshot = MetricSnapshot.placeholder()
@@ -83,4 +84,58 @@ import Foundation
 
     #expect(rates.read == 4_000)
     #expect(rates.write == 500)
+}
+
+@Test func alertEvaluatorReturnsConfiguredAlerts() {
+    let snapshot = MetricSnapshot(
+        timestamp: Date(timeIntervalSince1970: 300),
+        cpuUsage: 0.92,
+        cpuCores: [
+            CPUCoreSnapshot(index: 0, usage: 0.95),
+            CPUCoreSnapshot(index: 1, usage: 0.88),
+        ],
+        memoryUsage: 0.93,
+        memoryUsedBytes: 15,
+        memoryTotalBytes: 16,
+        disk: DiskSnapshot(
+            usedBytes: 10,
+            freeBytes: 20,
+            totalBytes: 30,
+            readBytesPerSecond: 300 * 1_048_576,
+            writeBytesPerSecond: 10 * 1_048_576
+        ),
+        networkDownloadBytesPerSecond: 0,
+        networkUploadBytesPerSecond: 0,
+        activeNetworkInterfaces: 1,
+        battery: BatterySnapshot(
+            currentCapacity: 12,
+            maxCapacity: 100,
+            isCharging: false,
+            isOnBatteryPower: true,
+            timeRemainingMinutes: 25
+        ),
+        processes: [],
+        platform: PlatformCapabilities.current
+    )
+    let configuration = MetricAlertConfiguration(
+        cpuHighUsage: MetricAlertRule(isEnabled: true, thresholdPercent: 85),
+        memoryHighUsage: MetricAlertRule(isEnabled: true, thresholdPercent: 90),
+        batteryLowLevel: MetricAlertRule(isEnabled: true, thresholdPercent: 20),
+        diskActivityHigh: DiskActivityAlertRule(
+            isEnabled: true,
+            thresholdMegabytesPerSecond: 200
+        ),
+        cooldownMinutes: 5
+    )
+
+    let alerts = MetricAlertEvaluator.alerts(
+        for: snapshot,
+        configuration: configuration
+    )
+
+    #expect(alerts.count == 4)
+    #expect(alerts.map(\.type).contains(.cpuHighUsage))
+    #expect(alerts.map(\.type).contains(.memoryHighUsage))
+    #expect(alerts.map(\.type).contains(.batteryLowLevel))
+    #expect(alerts.map(\.type).contains(.diskActivityHigh))
 }
