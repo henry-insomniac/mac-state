@@ -52,6 +52,13 @@ enum AppTextKey {
     case settingsSubtitle
     case general
     case generalSummary
+    case dashboard
+    case dashboardSummary
+    case overviewPinned
+    case showInPopover
+    case expandByDefault
+    case moveUp
+    case moveDown
     case launchAtLogin
     case refreshLaunchAtLoginStatus
     case menuBar
@@ -216,6 +223,20 @@ enum AppText {
             return "通用"
         case (.simplifiedChinese, .generalSummary):
             return "语言和基础应用行为。"
+        case (.simplifiedChinese, .dashboard):
+            return "面板"
+        case (.simplifiedChinese, .dashboardSummary):
+            return "控制弹出面板里显示哪些模块，以及它们的顺序。"
+        case (.simplifiedChinese, .overviewPinned):
+            return "顶部总览会始终固定显示，保证关键图表一打开就能看到。"
+        case (.simplifiedChinese, .showInPopover):
+            return "在弹出面板中显示"
+        case (.simplifiedChinese, .expandByDefault):
+            return "默认展开"
+        case (.simplifiedChinese, .moveUp):
+            return "上移"
+        case (.simplifiedChinese, .moveDown):
+            return "下移"
         case (.simplifiedChinese, .launchAtLogin):
             return "登录时启动 mac-state"
         case (.simplifiedChinese, .refreshLaunchAtLoginStatus):
@@ -423,6 +444,20 @@ enum AppText {
             return "General"
         case (.english, .generalSummary):
             return "Language and basic application behavior."
+        case (.english, .dashboard):
+            return "Dashboard"
+        case (.english, .dashboardSummary):
+            return "Choose which modules appear in the popover and control their order."
+        case (.english, .overviewPinned):
+            return "The overview stays pinned at the top so critical charts remain visible."
+        case (.english, .showInPopover):
+            return "Show in popover"
+        case (.english, .expandByDefault):
+            return "Expand by default"
+        case (.english, .moveUp):
+            return "Move Up"
+        case (.english, .moveDown):
+            return "Move Down"
         case (.english, .launchAtLogin):
             return "Launch mac-state at login"
         case (.english, .refreshLaunchAtLoginStatus):

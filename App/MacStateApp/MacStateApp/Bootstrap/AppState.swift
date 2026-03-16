@@ -18,6 +18,7 @@ final class AppState: ObservableObject {
     }
 
     @Published private(set) var menuBarPresentation = MenuBarPresentation.default
+    @Published private(set) var dashboardPresentation = DashboardPresentation.default
     @Published private(set) var appLanguage: AppLanguage = .system
     @Published private(set) var alertConfiguration = MetricAlertConfiguration()
     @Published private(set) var launchAtLoginStatus = LaunchAtLoginStatus(
@@ -98,6 +99,28 @@ final class AppState: ObservableObject {
         resolvedMenuBarMetrics(for: menuBarPresentation)
     }
 
+    var dashboardModules: [DashboardModuleConfiguration] {
+        dashboardPresentation.orderedModules
+    }
+
+    var visibleDashboardModules: [DashboardModuleType] {
+        dashboardModules
+            .filter(\.isVisible)
+            .map(\.type)
+    }
+
+    var dashboardConfigurationSummaryText: String {
+        let visibleCount = dashboardModules.filter(\.isVisible).count
+        let totalCount = dashboardModules.count
+
+        switch resolvedLanguage {
+        case .simplifiedChinese:
+            return "当前显示 \(visibleCount) / \(totalCount) 个模块。"
+        case .english, .system:
+            return "Showing \(visibleCount) of \(totalCount) modules."
+        }
+    }
+
     var menuBarSelectedMetricsDetailText: String {
         let selectionCount = menuBarSelectedMetrics.count
 
@@ -107,6 +130,80 @@ final class AppState: ObservableObject {
         case .english, .system:
             return "\(selectionCount) selected. The first metric controls the menu bar icon."
         }
+    }
+
+    func dashboardModuleTitle(_ module: DashboardModuleType) -> String {
+        switch module {
+        case .battery:
+            text(.battery)
+        case .network:
+            text(.network)
+        case .cpu:
+            text(.cpu)
+        case .cpuCores:
+            text(.cpuCores)
+        case .memory:
+            text(.memory)
+        case .disk:
+            text(.disk)
+        case .sensors:
+            text(.sensors)
+        case .alerts:
+            text(.alerts)
+        case .trends:
+            text(.trends)
+        case .runningApps:
+            text(.runningApps)
+        }
+    }
+
+    func dashboardModuleSummary(_ module: DashboardModuleType) -> String {
+        switch module {
+        case .battery:
+            batteryDetailText
+        case .network:
+            combinedNetworkRateText
+        case .cpu:
+            cpuUsageText
+        case .cpuCores:
+            cpuCoreCountText
+        case .memory:
+            memoryFootprintText
+        case .disk:
+            diskActivityText
+        case .sensors:
+            thermalConditionText
+        case .alerts:
+            alertsStatusText
+        case .trends:
+            historySummaryText
+        case .runningApps:
+            runningAppsText
+        }
+    }
+
+    func isDashboardModuleVisible(_ module: DashboardModuleType) -> Bool {
+        dashboardPresentation.configuration(for: module).isVisible
+    }
+
+    func isDashboardModuleExpandedByDefault(_ module: DashboardModuleType) -> Bool {
+        dashboardPresentation.configuration(for: module).isExpandedByDefault
+    }
+
+    func canMoveDashboardModuleUp(_ module: DashboardModuleType) -> Bool {
+        guard let index = dashboardModules.firstIndex(where: { $0.type == module }) else {
+            return false
+        }
+
+        return index > 0
+    }
+
+    func canMoveDashboardModuleDown(_ module: DashboardModuleType) -> Bool {
+        guard let index = dashboardModules.firstIndex(where: { $0.type == module }) else {
+            return false
+        }
+
+        return index < dashboardModules.count - 1
     }
 
     func isMenuBarMetricSelected(_ value: MenuBarPrimaryMetric) -> Bool {
@@ -680,6 +777,15 @@ final class AppState: ObservableObject {
 
         normalizeMenuBarPresentation()
 
+        if let storedDashboardPresentation = await settingsStore.codableValue(
+            for: .dashboardPresentation,
+            as: DashboardPresentation.self
+        ) {
+            dashboardPresentation = storedDashboardPresentation
+        } else {
+            dashboardPresentation = .default
+        }
+
         if let restoredAlertConfiguration = await settingsStore.codableValue(
             for: .alertConfiguration,
             as: MetricAlertConfiguration.self
@@ -712,6 +818,76 @@ final class AppState: ObservableObject {
             metrics.removeAll { $0 == value }
             metrics.insert(value, at: 0)
             assignMenuBarMetrics(metrics, to: &presentation)
+        }
+    }
+
+    func setDashboardModuleVisible(
+        _ module: DashboardModuleType,
+        isVisible: Bool
+    ) {
+        updateDashboardPresentation { presentation in
+            let modules = dashboardPresentationModules(from: presentation).map { configuration in
+                guard configuration.type == module else {
+                    return configuration
+                }
+
+                return DashboardModuleConfiguration(
+                    type: configuration.type,
+                    isVisible: isVisible,
+                    isExpandedByDefault: configuration.isExpandedByDefault
+                )
+            }
+
+            presentation.modules = modules
+        }
+    }
+
+    func setDashboardModuleExpandedByDefault(
+        _ module: DashboardModuleType,
+        isExpanded: Bool
+    ) {
+        updateDashboardPresentation { presentation in
+            let modules = dashboardPresentationModules(from: presentation).map { configuration in
+                guard configuration.type == module else {
+                    return configuration
+                }
+
+                return DashboardModuleConfiguration(
+                    type: configuration.type,
+                    isVisible: configuration.isVisible,
+                    isExpandedByDefault: isExpanded
+                )
+            }
+
+            presentation.modules = modules
+        }
+    }
+
+    func moveDashboardModuleUp(_ module: DashboardModuleType) {
+        updateDashboardPresentation { presentation in
+            var modules = dashboardPresentationModules(from: presentation)
+
+            guard let index = modules.firstIndex(where: { $0.type == module }),
+                  index > 0 else {
+                return
+            }
+
+            modules.swapAt(index, index - 1)
+            presentation.modules = modules
+        }
+    }
+
+    func moveDashboardModuleDown(_ module: DashboardModuleType) {
+        updateDashboardPresentation { presentation in
+            var modules = dashboardPresentationModules(from: presentation)
+
+            guard let index = modules.firstIndex(where: { $0.type == module }),
+                  index < modules.count - 1 else {
+                return
+            }
+
+            modules.swapAt(index, index + 1)
+            presentation.modules = modules
         }
     }
 
@@ -934,6 +1110,12 @@ final class AppState: ObservableObject {
         return metrics.map(menuBarPrimaryMetricTitle).joined(separator: separator)
     }
 
+    private func dashboardPresentationModules(
+        from presentation: DashboardPresentation
+    ) -> [DashboardModuleConfiguration] {
+        presentation.orderedModules
+    }
+
     private func normalizeMenuBarPresentation() {
         menuBarPresentation.textMode = menuBarPresentation.textMode.normalized
         let metrics = resolvedMenuBarMetrics(for: menuBarPresentation)
@@ -982,6 +1164,18 @@ final class AppState: ObservableObject {
 
         Task {
             await settingsStore.set(menuBarPresentation, for: .menuBarPresentation)
+        }
+    }
+
+    private func updateDashboardPresentation(
+        _ update: (inout DashboardPresentation) -> Void
+    ) {
+        update(&dashboardPresentation)
+        dashboardPresentation = DashboardPresentation(modules: dashboardPresentation.modules)
+        let dashboardPresentation = self.dashboardPresentation
+
+        Task {
+            await settingsStore.set(dashboardPresentation, for: .dashboardPresentation)
         }
     }
 

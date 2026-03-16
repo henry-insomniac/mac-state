@@ -73,3 +73,40 @@ import Foundation
     #expect(AppLanguage.system.displayName(in: .english) == "System")
     #expect(AppLanguage.system.displayName(in: .simplifiedChinese) == "跟随系统")
 }
+
+@Test func dashboardPresentationDefaultsMatchPopoverPolicy() {
+    let presentation = DashboardPresentation.default
+    let orderedModules = presentation.orderedModules
+
+    #expect(orderedModules.map(\.type) == DashboardModuleType.allCases)
+    #expect(presentation.configuration(for: .battery).isVisible == true)
+    #expect(presentation.configuration(for: .network).isVisible == true)
+    #expect(presentation.configuration(for: .cpu).isVisible == true)
+    #expect(presentation.configuration(for: .memory).isVisible == true)
+    #expect(presentation.configuration(for: .disk).isVisible == true)
+    #expect(presentation.configuration(for: .sensors).isVisible == true)
+    #expect(presentation.configuration(for: .cpuCores).isVisible == false)
+    #expect(presentation.configuration(for: .alerts).isVisible == false)
+    #expect(presentation.configuration(for: .trends).isVisible == false)
+    #expect(presentation.configuration(for: .runningApps).isVisible == false)
+    #expect(presentation.configuration(for: .cpuCores).isExpandedByDefault == false)
+}
+
+@Test func dashboardPresentationNormalizationDeduplicatesAndRestoresMissingModules() {
+    let presentation = DashboardPresentation(
+        modules: [
+            DashboardModuleConfiguration(type: .network, isVisible: false, isExpandedByDefault: true),
+            DashboardModuleConfiguration(type: .network, isVisible: true, isExpandedByDefault: false),
+            DashboardModuleConfiguration(type: .alerts, isVisible: true, isExpandedByDefault: true),
+        ]
+    )
+
+    let orderedModules = presentation.orderedModules
+
+    #expect(orderedModules.first?.type == .network)
+    #expect(orderedModules.first?.isVisible == false)
+    #expect(orderedModules.first?.isExpandedByDefault == false)
+    #expect(orderedModules.count == DashboardModuleType.allCases.count)
+    #expect(orderedModules.contains { $0.type == .alerts && $0.isVisible })
+    #expect(orderedModules.contains { $0.type == .battery && $0.isVisible })
+}

@@ -14,6 +14,7 @@ private enum SettingsLayout {
 
 private enum SettingsPane: String, CaseIterable, Identifiable {
     case general
+    case dashboard
     case alerts
     case diagnostics
     case about
@@ -274,6 +275,106 @@ struct SettingsView: View {
                                             .fill(Color.primary.opacity(0.04))
                                     )
                                     .clipShape(.rect(cornerRadius: 12))
+                            }
+                        }
+
+                    case .dashboard:
+                        SettingsSectionCard(
+                            appState.text(.dashboard),
+                            summary: appState.text(.dashboardSummary)
+                        ) {
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text(appState.text(.overviewPinned))
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+
+                                Text(appState.dashboardConfigurationSummaryText)
+                                    .font(.headline)
+                                    .fixedSize(horizontal: false, vertical: true)
+
+                                VStack(alignment: .leading, spacing: 12) {
+                                    ForEach(appState.dashboardModules) { module in
+                                        VStack(alignment: .leading, spacing: 12) {
+                                            HStack(alignment: .top, spacing: 12) {
+                                                VStack(alignment: .leading, spacing: 4) {
+                                                    Text(appState.dashboardModuleTitle(module.type))
+                                                        .font(.headline)
+
+                                                    Text(appState.dashboardModuleSummary(module.type))
+                                                        .font(.subheadline)
+                                                        .foregroundColor(.secondary)
+                                                        .fixedSize(horizontal: false, vertical: true)
+                                                }
+
+                                                Spacer(minLength: 12)
+
+                                                Text("\((appState.dashboardModules.firstIndex(where: { $0.type == module.type }) ?? 0) + 1)")
+                                                    .font(.caption)
+                                                    .bold()
+                                                    .frame(width: 24, height: 24)
+                                                    .background(
+                                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                            .fill(Color.primary.opacity(0.08))
+                                                    )
+                                                    .clipShape(.rect(cornerRadius: 12))
+                                            }
+
+                                            VStack(alignment: .leading, spacing: 10) {
+                                                Toggle(
+                                                    appState.text(.showInPopover),
+                                                    isOn: Binding(
+                                                        get: { appState.isDashboardModuleVisible(module.type) },
+                                                        set: { appState.setDashboardModuleVisible(module.type, isVisible: $0) }
+                                                    )
+                                                )
+
+                                                if module.type.isCollapsible {
+                                                    Toggle(
+                                                        appState.text(.expandByDefault),
+                                                        isOn: Binding(
+                                                            get: { appState.isDashboardModuleExpandedByDefault(module.type) },
+                                                            set: { appState.setDashboardModuleExpandedByDefault(module.type, isExpanded: $0) }
+                                                        )
+                                                    )
+                                                    .disabled(appState.isDashboardModuleVisible(module.type) == false)
+                                                }
+
+                                                HStack(spacing: 10) {
+                                                    Button(
+                                                        appState.text(.moveUp),
+                                                        systemImage: "arrow.up"
+                                                    ) {
+                                                        appState.moveDashboardModuleUp(module.type)
+                                                    }
+                                                    .buttonStyle(.bordered)
+                                                    .controlSize(.small)
+                                                    .disabled(appState.canMoveDashboardModuleUp(module.type) == false)
+
+                                                    Button(
+                                                        appState.text(.moveDown),
+                                                        systemImage: "arrow.down"
+                                                    ) {
+                                                        appState.moveDashboardModuleDown(module.type)
+                                                    }
+                                                    .buttonStyle(.bordered)
+                                                    .controlSize(.small)
+                                                    .disabled(appState.canMoveDashboardModuleDown(module.type) == false)
+                                                }
+                                            }
+                                        }
+                                        .padding(14)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                                .fill(Color.primary.opacity(0.04))
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+                                        )
+                                    }
+                                }
                             }
                         }
 
@@ -648,6 +749,8 @@ struct SettingsView: View {
         switch pane {
         case .general:
             return appState.text(.general)
+        case .dashboard:
+            return appState.text(.dashboard)
         case .alerts:
             return appState.text(.alerts)
         case .diagnostics:
