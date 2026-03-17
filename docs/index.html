@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>mac-state 1.0.1</title>
+    <title>mac-state 1.0.2</title>
     <meta
       name="description"
-      content="mac-state 是一个原生 macOS 菜单栏状态监测工具，强调轻量、实时、可配置，以及更克制的桌面体验。"
+      content="mac-state 1.0.2 是一个原生 macOS 菜单栏状态监测工具，修正了内存读数口径，让百分比更贴近真实系统压力。"
     />
     <meta name="theme-color" content="#111613" />
     <link rel="icon" type="image/png" href="branding/mac-state-logo-1024.png" />
@@ -45,14 +45,14 @@
       <main id="top">
         <section class="hero">
           <div class="hero-copy">
-            <p class="eyebrow" data-i18n="eyebrowVersion">版本 1.0.1</p>
+            <p class="eyebrow" data-i18n="eyebrowVersion">版本 1.0.2</p>
             <h1 data-i18n="heroTitle">一个原生的 macOS 菜单栏状态监测工具，轻、准、可控。</h1>
             <p class="lede" data-i18n="heroLede">
               mac-state 把实时系统指标放回菜单栏该有的位置。先看最关键的信息，再按需打开细节，不把桌面变成一个喧闹的大屏监控台。
             </p>
 
             <div class="hero-actions">
-              <a class="button button-primary" href="https://github.com/henry-insomniac/mac-state/releases/download/v1.0.1/mac-state-1.0.1-macos-unsigned.pkg" data-i18n="heroPrimaryCta">直接下载 PKG</a>
+              <a class="button button-primary" href="https://github.com/henry-insomniac/mac-state/releases/download/v1.0.2/mac-state-1.0.2-macos-unsigned.pkg" data-i18n="heroPrimaryCta">直接下载 PKG</a>
               <a class="button button-secondary" href="https://github.com/henry-insomniac/mac-state" data-i18n="heroSecondaryCta">查看源码</a>
             </div>
 
@@ -70,7 +70,7 @@
               <a class="community-card" href="https://github.com/henry-insomniac/mac-state/releases">
                 <p class="community-kicker" data-i18n="communityReleaseKicker">获取构建</p>
                 <strong data-i18n="communityReleaseTitle">打开 Releases</strong>
-                <span data-i18n="communityReleaseBody">下载 1.0.1 构建、校验值和后续更新版本。</span>
+                <span data-i18n="communityReleaseBody">下载 1.0.2 构建、校验值，并查看这次内存读数修正。</span>
               </a>
             </div>
 
@@ -166,8 +166,8 @@
 
         <section class="section section-modules" id="modules">
           <div class="section-heading">
-            <p class="eyebrow" data-i18n="shipsEyebrow">1.0.1 包含什么</p>
-            <h2 data-i18n="shipsTitle">核心遥测能力已经齐了，同时还保留了收敛界面的空间。</h2>
+            <p class="eyebrow" data-i18n="shipsEyebrow">1.0.2 更新了什么</p>
+            <h2 data-i18n="shipsTitle">这一版重点修正内存读数口径，让可回收缓存不再被误判成接近打满的硬压力。</h2>
           </div>
 
           <div class="module-strip">
@@ -188,18 +188,18 @@
           <div class="story-grid">
             <article class="story-card">
               <p class="story-index">01</p>
-              <h3 data-i18n="storyOneTitle">只显示真正重要的内容</h3>
-              <p data-i18n="storyOneBody">用户可以隐藏不需要的 dashboard 模块，重新排序保留下来的部分，让弹出面板保持短而清楚。</p>
+              <h3 data-i18n="storyOneTitle">内存读数更贴近系统体感</h3>
+              <p data-i18n="storyOneBody">可回收缓存不再直接推高内存百分比，所以看到 100% 的概率会明显下降，读数和“机器有没有卡”会更一致。</p>
             </article>
             <article class="story-card">
               <p class="story-index">02</p>
-              <h3 data-i18n="storyTwoTitle">更早发现问题</h3>
-              <p data-i18n="storyTwoBody">本地告警已经覆盖 CPU、内存、电池和磁盘活动，并提供冷却时间和最近告警历史。</p>
+              <h3 data-i18n="storyTwoTitle">告警与历史沿用同一修正口径</h3>
+              <p data-i18n="storyTwoBody">新的内存计算会同时反映在实时面板、历史曲线和高内存告警里，避免不同界面对同一台机器给出冲突印象。</p>
             </article>
             <article class="story-card">
               <p class="story-index">03</p>
-              <h3 data-i18n="storyThreeTitle">不止是一个 demo</h3>
-              <p data-i18n="storyThreeBody">实时历史、24 小时聚合、CSV 导出、Widget 快照和正式图标系统，让这个项目开始具备产品感而不是原型感。</p>
+              <h3 data-i18n="storyThreeTitle">1.0.2 安装包与页面同步更新</h3>
+              <p data-i18n="storyThreeBody">本次发布同步更新了 PKG、ZIP、校验值、官网文案和更新日志，下载入口会直接指向新的 1.0.2 资产。</p>
             </article>
           </div>
         </section>
@@ -208,13 +208,14 @@
           <div class="download-panel">
             <div>
               <p class="eyebrow" data-i18n="downloadEyebrow">发布</p>
-              <h2>mac-state 1.0.1</h2>
-              <p data-i18n="downloadBody">支持 macOS 11+，兼容 Intel 与 Apple Silicon。本地打包流程会输出 Release zip 以及对应的 SHA-256 校验值。</p>
+              <h2>mac-state 1.0.2</h2>
+              <p data-i18n="downloadBody">1.0.2 修正了内存占用读数，避免把可回收缓存误算成接近 100% 的硬压力。支持 macOS 11+，兼容 Intel 与 Apple Silicon。</p>
             </div>
 
             <div class="download-actions">
-              <a class="button button-primary" href="https://github.com/henry-insomniac/mac-state/releases/download/v1.0.1/mac-state-1.0.1-macos-unsigned.pkg" data-i18n="downloadPrimaryCta">直接下载 PKG</a>
-              <a class="button button-secondary" href="https://github.com/henry-insomniac/mac-state/releases/download/v1.0.1/mac-state-1.0.1-macos.zip" data-i18n="downloadSecondaryCta">下载 ZIP</a>
+              <a class="button button-primary" href="https://github.com/henry-insomniac/mac-state/releases/download/v1.0.2/mac-state-1.0.2-macos-unsigned.pkg" data-i18n="downloadPrimaryCta">直接下载 PKG</a>
+              <a class="button button-secondary" href="https://github.com/henry-insomniac/mac-state/releases/download/v1.0.2/mac-state-1.0.2-macos.zip" data-i18n="downloadSecondaryCta">下载 ZIP</a>
+              <a class="button button-secondary" href="https://github.com/henry-insomniac/mac-state/blob/main/CHANGELOG.md" data-i18n="downloadChangelogCta">查看更新日志</a>
               <a class="button button-secondary" href="https://github.com/henry-insomniac/mac-state/releases" data-i18n="downloadTertiaryCta">打开 Releases</a>
             </div>
 

@@ -88,6 +88,25 @@ import MacStateFoundation
     #expect(rates.write == 500)
 }
 
+@Test func memoryCountersExcludeReclaimableCacheFromUsedBytes() {
+    var stats = vm_statistics64()
+    stats.internal_page_count = 400
+    stats.wire_count = 100
+    stats.throttled_count = 20
+    stats.external_page_count = 300
+    stats.free_count = 10
+    stats.speculative_count = 5
+
+    let counters = LiveMetricsProvider.makeMemoryCounters(
+        from: stats,
+        pageSizeBytes: 4_096,
+        totalBytes: 1_000 * 4_096
+    )
+
+    #expect(counters.usedBytes == 520 * 4_096)
+    #expect(abs(counters.usage - 0.52) < 0.0001)
+}
+
 @Test func alertEvaluatorReturnsConfiguredAlerts() {
     let snapshot = MetricSnapshot(
         timestamp: Date(timeIntervalSince1970: 300),

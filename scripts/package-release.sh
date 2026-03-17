@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-VERSION="${1:-1.0.1}"
+VERSION="${1:-1.0.2}"
 BUILD_ROOT="$ROOT_DIR/dist/release-$VERSION"
 DERIVED_DATA_PATH="$BUILD_ROOT/DerivedData"
 APP_PATH="$DERIVED_DATA_PATH/Build/Products/Release/MacStateApp.app"
@@ -15,7 +15,7 @@ PKG_CHECKSUM_PATH="$BUILD_ROOT/mac-state-$VERSION-macos-unsigned.pkg.sha256"
 mkdir -p "$BUILD_ROOT"
 
 xcodebuild \
-  -project "$ROOT_DIR/App/MacStateApp/MacStateApp.xcodeproj" \
+  -workspace "$ROOT_DIR/MacState.xcworkspace" \
   -scheme MacStateApp \
   -configuration Release \
   -destination "generic/platform=macOS" \

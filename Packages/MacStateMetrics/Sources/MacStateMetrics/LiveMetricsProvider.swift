@@ -173,6 +173,27 @@ public actor LiveMetricsProvider: MetricsSnapshotProviding {
     }
 }
 
+extension LiveMetricsProvider {
+    static func makeMemoryCounters(
+        from stats: vm_statistics64,
+        pageSizeBytes: UInt64,
+        totalBytes: UInt64
+    ) -> MemoryCounters {
+        // macOS keeps file-backed cache warm and will reclaim it under pressure,
+        // so treating only "free" pages as available pushes usage toward 100%
+        // even when the system remains responsive.
+        let usedPageCount = UInt64(stats.internal_page_count)
+            + UInt64(stats.wire_count)
+            + UInt64(stats.throttled_count)
+        let usedBytes = min(usedPageCount * pageSizeBytes, totalBytes)
+
+        return MemoryCounters(
+            usedBytes: usedBytes,
+            totalBytes: totalBytes
+        )
+    }
+}
+
 private extension LiveMetricsProvider {
     static func readCoreLoadCounters() throws -> [CPULoadCounters] {
         var processorCount: natural_t = 0
@@ -351,13 +372,10 @@ private extension LiveMetricsProvider {
             throw MetricsSamplingError.memoryCountersUnavailable(code: pageSizeStatus)
         }
 
-        let pageSizeBytes = UInt64(pageSize)
-        let freeBytes = UInt64(stats.free_count + stats.speculative_count) * pageSizeBytes
         let totalBytes = ProcessInfo.processInfo.physicalMemory
-        let usedBytes = totalBytes > freeBytes ? totalBytes - freeBytes : 0
-
-        return MemoryCounters(
-            usedBytes: usedBytes,
+        return makeMemoryCounters(
+            from: stats,
+            pageSizeBytes: UInt64(pageSize),
             totalBytes: totalBytes
         )
     }

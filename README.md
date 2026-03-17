@@ -66,12 +66,12 @@ This repository currently contains a working MVP foundation:
 - Build the app with:
 
 ```sh
-xcodebuild -project App/MacStateApp/MacStateApp.xcodeproj -target MacStateApp -configuration Debug build CODE_SIGNING_ALLOWED=NO
+xcodebuild -workspace MacState.xcworkspace -scheme MacStateApp -configuration Debug build CODE_SIGNING_ALLOWED=NO
 ```
 
 ## Packaging
 
-- Run `scripts/package-release.sh 1.0.1` to create a local Release zip, an unsigned `.pkg`, and SHA-256 checksums under `dist/`.
+- Run `scripts/package-release.sh 1.0.2` to create a local Release zip, an unsigned `.pkg`, and SHA-256 checksums under `dist/`.
 - Without a `Developer ID Application` / `Developer ID Installer` certificate, both outputs remain unsigned for Gatekeeper purposes. The `.pkg` is useful as an installer wrapper, but it does not replace signing and notarization.
 
 ## License
