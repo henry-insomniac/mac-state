@@ -24,3 +24,33 @@ try { theme = localStorage.getItem('mac-state-site-theme') || theme; } catch {}
 function setTheme(value) { document.documentElement.dataset.theme = value; themeButton.setAttribute('aria-pressed', String(value === 'dark')); }
 setTheme(theme);
 themeButton.addEventListener('click', () => { theme = theme === 'dark' ? 'light' : 'dark'; setTheme(theme); try { localStorage.setItem('mac-state-site-theme', theme); } catch {} });
+
+const scene = document.querySelector('#notch-demo');
+const target = document.querySelector('.notch-target');
+const replay = document.querySelector('.replay');
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let demoTimer;
+function showDemo(open) {
+ clearTimeout(demoTimer);
+ scene.dataset.state = open ? 'open' : 'idle';
+ target.setAttribute('aria-expanded', String(open));
+ document.querySelector('#demo-panel').setAttribute('aria-hidden', String(!open));
+}
+function playDemo() {
+ if (reducedMotion.matches) { showDemo(true); return; }
+ showDemo(false);
+ requestAnimationFrame(() => requestAnimationFrame(() => {
+  scene.dataset.state = 'playing';
+  target.setAttribute('aria-expanded', 'true');
+  document.querySelector('#demo-panel').setAttribute('aria-hidden', 'false');
+  demoTimer = setTimeout(() => showDemo(true), 4000);
+ }));
+}
+target.addEventListener('click', () => showDemo(target.getAttribute('aria-expanded') !== 'true'));
+replay.addEventListener('click', playDemo);
+reducedMotion.addEventListener('change', () => showDemo(true));
+showDemo(reducedMotion.matches);
+const demoObserver = new IntersectionObserver(entries => {
+ if (entries.some(entry => entry.isIntersecting)) { playDemo(); demoObserver.disconnect(); }
+}, {threshold:.45});
+demoObserver.observe(scene);
