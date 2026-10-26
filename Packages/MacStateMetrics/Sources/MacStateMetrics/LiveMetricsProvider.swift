@@ -114,7 +114,6 @@ struct DiskIOCounters: Equatable {
 public actor LiveMetricsProvider: MetricsSnapshotProviding {
     private var previousCoreLoads: [CPULoadCounters] = []
     private var previousNetworkCounters: NetworkCounters?
-    private var previousDiskIOCounters: DiskIOCounters?
     private let sensorBridge = SensorBridge()
 
     public init() {}
@@ -125,7 +124,6 @@ public actor LiveMetricsProvider: MetricsSnapshotProviding {
         let currentCoreLoads = try Self.readCoreLoadCounters()
         let memoryCounters = try Self.readMemoryCounters()
         let diskSpaceCounters = try Self.readDiskSpaceCounters()
-        let currentDiskIOCounters = try Self.readDiskIOCounters(at: timestamp)
         let currentNetworkCounters = try Self.readNetworkCounters(at: timestamp)
         let battery = Self.readBatterySnapshot()
         let sensors = sensorBridge.snapshot(platform: platform)
@@ -141,11 +139,9 @@ public actor LiveMetricsProvider: MetricsSnapshotProviding {
             system: 0,
             idle: 0
         )).usage(since: Self.makeAggregateCPULoad(from: previousCoreLoads))
-        let diskRates = currentDiskIOCounters.rates(since: previousDiskIOCounters)
         let networkRates = currentNetworkCounters.rates(since: previousNetworkCounters)
 
         previousCoreLoads = currentCoreLoads
-        previousDiskIOCounters = currentDiskIOCounters
         previousNetworkCounters = currentNetworkCounters
 
         return MetricSnapshot(
@@ -159,8 +155,8 @@ public actor LiveMetricsProvider: MetricsSnapshotProviding {
                 usedBytes: diskSpaceCounters.usedBytes,
                 freeBytes: diskSpaceCounters.freeBytes,
                 totalBytes: diskSpaceCounters.totalBytes,
-                readBytesPerSecond: diskRates.read,
-                writeBytesPerSecond: diskRates.write
+                readBytesPerSecond: nil,
+                writeBytesPerSecond: nil
             ),
             networkDownloadBytesPerSecond: networkRates.download,
             networkUploadBytesPerSecond: networkRates.upload,
@@ -284,63 +280,6 @@ private extension LiveMetricsProvider {
             usedBytes: usedBytes,
             freeBytes: freeBytes,
             totalBytes: totalBytes
-        )
-    }
-
-    static func readDiskIOCounters(at timestamp: Date) throws -> DiskIOCounters {
-        let processCount = proc_listallpids(nil, 0)
-        guard processCount >= 0 else {
-            throw MetricsSamplingError.diskCountersUnavailable
-        }
-
-        let byteCount = max(Int(processCount), 1) * MemoryLayout<pid_t>.stride
-        let rawBuffer = UnsafeMutableRawPointer.allocate(
-            byteCount: byteCount,
-            alignment: MemoryLayout<pid_t>.alignment
-        )
-
-        defer {
-            rawBuffer.deallocate()
-        }
-
-        let listedProcessCount = proc_listallpids(rawBuffer, Int32(byteCount))
-        guard listedProcessCount >= 0 else {
-            throw MetricsSamplingError.diskCountersUnavailable
-        }
-
-        let pids = rawBuffer.assumingMemoryBound(to: pid_t.self)
-        var totalReadBytes: UInt64 = 0
-        var totalWriteBytes: UInt64 = 0
-
-        for index in 0..<Int(listedProcessCount) {
-            let pid = pids[index]
-            guard pid > 0 else {
-                continue
-            }
-
-            var usageInfo = rusage_info_v4()
-            let result = withUnsafeMutablePointer(to: &usageInfo) { pointer in
-                proc_pid_rusage(
-                    pid,
-                    RUSAGE_INFO_V4,
-                    UnsafeMutableRawPointer(pointer).assumingMemoryBound(
-                        to: Optional<UnsafeMutableRawPointer>.self
-                    )
-                )
-            }
-
-            guard result == 0 else {
-                continue
-            }
-
-            totalReadBytes &+= usageInfo.ri_diskio_bytesread
-            totalWriteBytes &+= usageInfo.ri_diskio_byteswritten
-        }
-
-        return DiskIOCounters(
-            timestamp: timestamp,
-            readBytes: totalReadBytes,
-            writeBytes: totalWriteBytes
         )
     }
 

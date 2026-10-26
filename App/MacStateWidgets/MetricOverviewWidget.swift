@@ -5,6 +5,11 @@ import MacStateFoundation
 private struct MetricOverviewEntry: TimelineEntry {
     let date: Date
     let snapshot: WidgetSnapshot
+    var isUnavailable = false
+
+    var freshness: WidgetDataFreshness {
+        WidgetDataFreshness(timestamp: isUnavailable ? nil : snapshot.timestamp, now: date)
+    }
 }
 
 private struct MetricOverviewProvider: TimelineProvider {
@@ -18,25 +23,35 @@ private struct MetricOverviewProvider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (MetricOverviewEntry) -> Void) {
-        completion(makeEntry())
+        completion(context.isPreview ? placeholder(in: context) : makeEntry())
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<MetricOverviewEntry>) -> Void) {
         let entry = makeEntry()
-        let nextRefreshDate = Date().addingTimeInterval(300)
+        let nextRefreshDate = entry.date.addingTimeInterval(300)
+        var entries = [entry]
+        if entry.freshness == .current {
+            // Supply the expiry transition now; the system may defer another provider call.
+            entries.append(MetricOverviewEntry(
+                date: entry.snapshot.timestamp.addingTimeInterval(WidgetDataFreshness.maximumAge),
+                snapshot: entry.snapshot
+            ))
+        }
         completion(
             Timeline(
-                entries: [entry],
+                entries: entries,
                 policy: .after(nextRefreshDate)
             )
         )
     }
 
     private func makeEntry() -> MetricOverviewEntry {
-        let snapshot = snapshotStore.load() ?? .placeholder
+        guard let snapshot = snapshotStore.load() else {
+            return MetricOverviewEntry(date: Date(), snapshot: .placeholder, isUnavailable: true)
+        }
 
         return MetricOverviewEntry(
-            date: snapshot.timestamp,
+            date: Date(),
             snapshot: snapshot
         )
     }
@@ -47,29 +62,22 @@ private struct MetricOverviewWidgetView: View {
     let entry: MetricOverviewProvider.Entry
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color(red: 0.08, green: 0.12, blue: 0.19),
-                            Color(red: 0.15, green: 0.18, blue: 0.24),
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-
+        WidgetSurface {
             VStack(alignment: .leading, spacing: 14) {
                 header
 
-                if family == .systemSmall {
+                if entry.freshness != .current {
+                    Text(AppLanguage.system.resolvedLanguage == .simplifiedChinese
+                         ? "打开 mac-state 以更新系统状态。"
+                         : "Open mac-state to update system metrics.")
+                        .font(.callout)
+                        .foregroundColor(.white)
+                } else if family == .systemSmall {
                     compactContent
                 } else {
                     expandedContent
                 }
             }
-            .padding(16)
         }
     }
 
@@ -80,16 +88,22 @@ private struct MetricOverviewWidgetView: View {
                     .font(.headline)
                     .foregroundColor(.white)
 
-                Text(entry.snapshot.platformSummary)
+                Text(entry.freshness == .missing
+                     ? (AppLanguage.system.resolvedLanguage == .simplifiedChinese ? "等待数据" : "Waiting for data")
+                     : entry.freshness == .stale
+                     ? (AppLanguage.system.resolvedLanguage == .simplifiedChinese ? "数据已过期" : "Data is out of date")
+                     : entry.snapshot.platformSummary)
                     .font(.caption)
                     .foregroundColor(.white.opacity(0.7))
             }
 
             Spacer()
 
-            Text(timestampText)
-                .font(.caption2)
-                .foregroundColor(.white.opacity(0.7))
+            if !entry.isUnavailable {
+                Text(entry.snapshot.timestamp, style: .time)
+                    .font(.caption2)
+                    .foregroundColor(.white.opacity(0.7))
+            }
         }
     }
 
@@ -124,7 +138,7 @@ private struct MetricOverviewWidgetView: View {
                 metricTile(
                     title: "CPU",
                     value: percentageText(for: entry.snapshot.cpuUsage),
-                    subtitle: "Live usage",
+                    subtitle: "Last sample",
                     tint: Color(red: 0.94, green: 0.39, blue: 0.33)
                 )
                 metricTile(
@@ -144,8 +158,8 @@ private struct MetricOverviewWidgetView: View {
                 )
                 metricTile(
                     title: "Disk",
-                    value: rateText(for: entry.snapshot.diskReadBytesPerSecond + entry.snapshot.diskWriteBytesPerSecond),
-                    subtitle: diskUsageText,
+                    value: diskUsageText,
+                    subtitle: "Disk capacity",
                     tint: Color(red: 0.76, green: 0.68, blue: 0.56)
                 )
             }
@@ -219,12 +233,6 @@ private struct MetricOverviewWidgetView: View {
         }
     }
 
-    private var timestampText: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
-        return formatter.string(from: entry.snapshot.timestamp)
-    }
-
     private var memoryFootprintText: String {
         "\(storageText(for: entry.snapshot.memoryUsedBytes)) / \(storageText(for: entry.snapshot.memoryTotalBytes))"
     }
@@ -292,7 +300,7 @@ private struct MetricOverviewWidgetView: View {
 }
 
 struct MetricOverviewWidget: Widget {
-    private let kind = "MetricOverviewWidget"
+    private let kind = SharedDataConfiguration.metricOverviewWidgetKind
 
     var body: some WidgetConfiguration {
         StaticConfiguration(

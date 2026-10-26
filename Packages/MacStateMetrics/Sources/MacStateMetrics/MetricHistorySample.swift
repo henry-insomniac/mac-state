@@ -16,7 +16,7 @@ public struct MetricHistorySample: Sendable, Equatable, Codable, Identifiable {
     public let cpuUsage: Double
     public let memoryUsage: Double
     public let diskUsage: Double
-    public let diskThroughputBytesPerSecond: UInt64
+    public let diskThroughputBytesPerSecond: UInt64?
     public let downloadBytesPerSecond: UInt64
     public let uploadBytesPerSecond: UInt64
     public let batteryLevel: Double?
@@ -26,7 +26,7 @@ public struct MetricHistorySample: Sendable, Equatable, Codable, Identifiable {
         cpuUsage: Double,
         memoryUsage: Double,
         diskUsage: Double,
-        diskThroughputBytesPerSecond: UInt64,
+        diskThroughputBytesPerSecond: UInt64?,
         downloadBytesPerSecond: UInt64,
         uploadBytesPerSecond: UInt64,
         batteryLevel: Double?
@@ -54,7 +54,7 @@ public struct MetricHistorySample: Sendable, Equatable, Codable, Identifiable {
             cpuUsage: snapshot.cpuUsage,
             memoryUsage: snapshot.memoryUsage,
             diskUsage: diskUsage,
-            diskThroughputBytesPerSecond: snapshot.disk.readBytesPerSecond + snapshot.disk.writeBytesPerSecond,
+            diskThroughputBytesPerSecond: snapshot.disk.throughputBytesPerSecond,
             downloadBytesPerSecond: snapshot.networkDownloadBytesPerSecond,
             uploadBytesPerSecond: snapshot.networkUploadBytesPerSecond,
             batteryLevel: snapshot.battery?.level
@@ -71,7 +71,7 @@ public struct MetricHistorySample: Sendable, Equatable, Codable, Identifiable {
         self.diskThroughputBytesPerSecond = try container.decodeIfPresent(
             UInt64.self,
             forKey: .diskThroughputBytesPerSecond
-        ) ?? 0
+        )
         self.downloadBytesPerSecond = try container.decode(UInt64.self, forKey: .downloadBytesPerSecond)
         self.uploadBytesPerSecond = try container.decode(UInt64.self, forKey: .uploadBytesPerSecond)
         self.batteryLevel = try container.decodeIfPresent(Double.self, forKey: .batteryLevel)
@@ -84,7 +84,7 @@ public struct MetricHistorySample: Sendable, Equatable, Codable, Identifiable {
         try container.encode(cpuUsage, forKey: .cpuUsage)
         try container.encode(memoryUsage, forKey: .memoryUsage)
         try container.encode(diskUsage, forKey: .diskUsage)
-        try container.encode(diskThroughputBytesPerSecond, forKey: .diskThroughputBytesPerSecond)
+        try container.encodeIfPresent(diskThroughputBytesPerSecond, forKey: .diskThroughputBytesPerSecond)
         try container.encode(downloadBytesPerSecond, forKey: .downloadBytesPerSecond)
         try container.encode(uploadBytesPerSecond, forKey: .uploadBytesPerSecond)
         try container.encodeIfPresent(batteryLevel, forKey: .batteryLevel)

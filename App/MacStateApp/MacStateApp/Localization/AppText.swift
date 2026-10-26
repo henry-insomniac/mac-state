@@ -218,7 +218,7 @@ enum AppText {
         case (.simplifiedChinese, .settings):
             return "设置"
         case (.simplifiedChinese, .settingsSubtitle):
-            return "调整启动方式、菜单栏展示、告警规则和应用信息。"
+            return "调整启动方式、刘海面板、告警规则和应用信息。"
         case (.simplifiedChinese, .general):
             return "通用"
         case (.simplifiedChinese, .generalSummary):
@@ -439,7 +439,7 @@ enum AppText {
         case (.english, .settings):
             return "Settings"
         case (.english, .settingsSubtitle):
-            return "Adjust startup behavior, menu bar presentation, alerts, and app details."
+            return "Adjust startup behavior, the notch panel, alerts, and app details."
         case (.english, .general):
             return "General"
         case (.english, .generalSummary):

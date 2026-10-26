@@ -7,6 +7,7 @@ helperApplication.setActivationPolicy(.prohibited)
 helperApplication.delegate = helperDelegate
 helperApplication.run()
 
+@MainActor
 private final class LoginHelperAppDelegate: NSObject, NSApplicationDelegate {
     private let mainApplicationBundleIdentifier = "io.github.henry-insomniac.mac-state"
 
@@ -32,7 +33,7 @@ private final class LoginHelperAppDelegate: NSObject, NSApplicationDelegate {
             at: mainApplicationURL,
             configuration: configuration
         ) { _, _ in
-            NSApp.terminate(nil)
+            Task { @MainActor in NSApp.terminate(nil) }
         }
     }
 }

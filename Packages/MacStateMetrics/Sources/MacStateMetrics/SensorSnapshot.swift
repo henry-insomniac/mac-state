@@ -83,6 +83,7 @@ public enum ThermalCondition: String, CaseIterable, Sendable, Codable {
 
 public enum SensorSource: String, Sendable, Equatable, Codable {
     case collecting
+    case publicThermalState
     case placeholder
     case smcBridge
     case thermalAndBatteryOnlyAppleSilicon
@@ -92,6 +93,10 @@ public enum SensorSource: String, Sendable, Equatable, Codable {
 
     public func localizedDescription(language: AppLanguage) -> String {
         switch (language.resolvedLanguage, self) {
+        case (.system, .publicThermalState), (.english, .publicThermalState):
+            return "macOS thermal state. Temperature and fan readings are not available in this edition."
+        case (.simplifiedChinese, .publicThermalState):
+            return "显示 macOS 热状态。此版本不提供温度和风扇读数。"
         case (.system, .collecting):
             return "Collecting sensor telemetry."
         case (.system, .placeholder):

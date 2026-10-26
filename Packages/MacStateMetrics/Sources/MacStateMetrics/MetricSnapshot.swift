@@ -22,15 +22,15 @@ public struct DiskSnapshot: Sendable, Equatable {
     public let usedBytes: UInt64
     public let freeBytes: UInt64
     public let totalBytes: UInt64
-    public let readBytesPerSecond: UInt64
-    public let writeBytesPerSecond: UInt64
+    public let readBytesPerSecond: UInt64?
+    public let writeBytesPerSecond: UInt64?
 
     public init(
         usedBytes: UInt64,
         freeBytes: UInt64,
         totalBytes: UInt64,
-        readBytesPerSecond: UInt64,
-        writeBytesPerSecond: UInt64
+        readBytesPerSecond: UInt64?,
+        writeBytesPerSecond: UInt64?
     ) {
         self.usedBytes = usedBytes
         self.freeBytes = freeBytes
@@ -38,6 +38,11 @@ public struct DiskSnapshot: Sendable, Equatable {
         self.readBytesPerSecond = readBytesPerSecond
         self.writeBytesPerSecond = writeBytesPerSecond
     }
+    public var throughputBytesPerSecond: UInt64? {
+        guard let readBytesPerSecond, let writeBytesPerSecond else { return nil }
+        return readBytesPerSecond + writeBytesPerSecond
+    }
+
 }
 
 public struct BatterySnapshot: Sendable, Equatable {

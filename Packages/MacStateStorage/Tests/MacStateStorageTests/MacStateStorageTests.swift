@@ -208,3 +208,25 @@ private func temporaryHistoryFileURL(named name: String) -> URL {
     try? FileManager.default.removeItem(at: fileURL.deletingLastPathComponent())
     return fileURL
 }
+
+@Test func unavailableDiskThroughputSurvivesPersistenceAggregationAndCSV() async throws {
+    let fileURL = temporaryHistoryFileURL(named: #function)
+    let store = MetricHistoryStore(fileURL: fileURL, legacyDefaults: nil)
+    let first = MetricHistorySample(timestamp: Date(timeIntervalSince1970: 10), cpuUsage: 0.1,
+        memoryUsage: 0.2, diskUsage: 0.3, diskThroughputBytesPerSecond: 100,
+        downloadBytesPerSecond: 10, uploadBytesPerSecond: 20, batteryLevel: nil)
+    let unavailable = MetricHistorySample(timestamp: Date(timeIntervalSince1970: 20), cpuUsage: 0.1,
+        memoryUsage: 0.2, diskUsage: 0.3, diskThroughputBytesPerSecond: nil,
+        downloadBytesPerSecond: 10, uploadBytesPerSecond: 20, batteryLevel: nil)
+    _ = await store.append(first)
+    let timeline = await store.append(unavailable)
+    #expect(timeline.daySamples.last?.diskThroughputBytesPerSecond == nil)
+    let restored = MetricHistoryStore(fileURL: fileURL, legacyDefaults: nil)
+    #expect(await restored.samples() == [first, unavailable])
+    let csv = MetricHistoryCSVExporter.csvString(for: [unavailable])
+    #expect(csv.split(separator: "\n")[1].split(separator: ",", omittingEmptySubsequences: false)[4].isEmpty)
+    try await store.clear()
+    #expect(await store.samples().isEmpty)
+    let cleared = MetricHistoryStore(fileURL: fileURL, legacyDefaults: nil)
+    #expect(await cleared.samples().isEmpty)
+}

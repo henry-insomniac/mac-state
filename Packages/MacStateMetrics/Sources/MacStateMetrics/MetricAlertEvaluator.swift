@@ -51,8 +51,8 @@ public enum MetricAlertEvaluator {
             )
         }
 
-        let diskThroughput = snapshot.disk.readBytesPerSecond + snapshot.disk.writeBytesPerSecond
         if configuration.diskActivityHigh.isEnabled,
+           let diskThroughput = snapshot.disk.throughputBytesPerSecond,
            diskThroughput >= configuration.diskActivityHigh.thresholdBytesPerSecond {
             alerts.append(
                 MetricAlert(

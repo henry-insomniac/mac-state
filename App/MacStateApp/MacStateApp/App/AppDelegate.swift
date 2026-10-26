@@ -5,29 +5,25 @@ import Combine
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let container = AppAssembler.makeLiveContainer()
     private lazy var windowRouter = WindowRouter(appState: container.appState)
-    private lazy var popoverController = PopoverController(
+    private lazy var notchController = NotchPanelController(
         appState: container.appState,
-        refreshMetrics: { [weak self] in
-            self?.container.metricsMonitor.refreshNow()
-        },
-        openHistory: { [weak self] in
-            self?.openHistory(nil)
-        },
-        openSettings: { [weak self] in
-            self?.openSettings(nil)
-        }
-    )
-    private lazy var statusItemController = StatusItemController(
-        appState: container.appState,
-        popoverController: popoverController
+        openDashboard: { [weak self] in self?.openDashboard(nil) },
+        openHistory: { [weak self] in self?.openHistory(nil) },
+        openSettings: { [weak self] in self?.openSettings(nil) }
     )
     private var subscriptions = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        #if DEBUG || STORE_DIAGNOSTICS
+        if CommandLine.arguments.contains("--sandbox-diagnostics") {
+            Task { await StoreDiagnostics.run() }
+            return
+        }
+        #endif
         NSApp.setActivationPolicy(.regular)
         NSApp.mainMenu = makeMainMenu()
         observeLanguageChanges()
-        statusItemController.start()
+        notchController.start()
         Task {
             await container.appState.loadPersistedState()
             refreshLocalizedChrome()
@@ -39,7 +35,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        notchController.stop()
         container.metricsMonitor.stop()
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        notchController.show()
+        return true
+    }
+
+    @objc private func openDashboard(_ sender: Any?) {
+        NSApp.activate(ignoringOtherApps: true)
+        windowRouter.showDashboard(
+            refreshMetrics: { [weak self] in self?.container.metricsMonitor.refreshNow() },
+            openHistory: { [weak self] in self?.openHistory(nil) },
+            openSettings: { [weak self] in self?.openSettings(nil) }
+        )
     }
 
     @objc
@@ -89,6 +100,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             keyEquivalent: ""
         )
         applicationMenu.addItem(.separator())
+        applicationMenu.addItem(withTitle: container.appState.text(.dashboard),
+                                action: #selector(openDashboard(_:)), keyEquivalent: "1")
         applicationMenu.addItem(
             withTitle: container.appState.text(.settings) + "…",
             action: #selector(openSettings(_:)),

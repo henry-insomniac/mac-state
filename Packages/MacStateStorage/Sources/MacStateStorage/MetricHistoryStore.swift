@@ -79,10 +79,11 @@ public actor MetricHistoryStore {
         return archive.timeline
     }
 
-    public func clear() {
+    public func clear() throws {
+        if fileManager.fileExists(atPath: fileURL.path) {
+            try fileManager.removeItem(at: fileURL)
+        }
         archive = StoredArchive(recentSamples: [], dayBuckets: [])
-
-        try? fileManager.removeItem(at: fileURL)
         legacyDefaults?.removeObject(forKey: StorageKey.samples)
     }
 
@@ -216,6 +217,14 @@ public actor MetricHistoryStore {
     ) -> Double {
         let currentTotal = currentValue * Double(currentCount)
         return (currentTotal + nextValue) / Double(currentCount + 1)
+    }
+
+    private func weightedAverage(
+        currentValue: UInt64?, currentCount: Int, nextValue: UInt64?
+    ) -> UInt64? {
+        // A partially observed minute is not a complete system-throughput sample.
+        guard let currentValue, let nextValue else { return nil }
+        return weightedAverage(currentValue: currentValue, currentCount: currentCount, nextValue: nextValue)
     }
 
     private func weightedAverage(
@@ -375,6 +384,14 @@ public actor MetricHistoryStore {
     ) -> Double {
         let currentTotal = currentValue * Double(currentCount)
         return (currentTotal + nextValue) / Double(currentCount + 1)
+    }
+
+    private static func weightedAverage(
+        currentValue: UInt64?, currentCount: Int, nextValue: UInt64?
+    ) -> UInt64? {
+        // A partially observed minute is not a complete system-throughput sample.
+        guard let currentValue, let nextValue else { return nil }
+        return weightedAverage(currentValue: currentValue, currentCount: currentCount, nextValue: nextValue)
     }
 
     private static func weightedAverage(

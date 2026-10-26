@@ -66,9 +66,9 @@ struct DashboardView: View {
 
                         OverviewMetricTile(
                             appState.text(.disk),
-                            value: appState.combinedDiskRateText,
+                            value: appState.diskUsageText,
                             detail: appState.diskFootprintText,
-                            trendValues: appState.diskTrendValues,
+                            trendValues: appState.historySamples.map(\.diskUsage),
                             tint: .gray
                         )
                     }

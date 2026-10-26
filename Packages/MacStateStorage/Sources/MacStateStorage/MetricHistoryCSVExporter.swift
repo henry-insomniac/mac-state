@@ -28,7 +28,7 @@ public enum MetricHistoryCSVExporter {
                 decimalString(from: sample.cpuUsage * 100),
                 decimalString(from: sample.memoryUsage * 100),
                 decimalString(from: sample.diskUsage * 100),
-                String(sample.diskThroughputBytesPerSecond),
+                sample.diskThroughputBytesPerSecond.map(String.init) ?? "",
                 String(sample.downloadBytesPerSecond),
                 String(sample.uploadBytesPerSecond),
                 String(sample.networkThroughputBytesPerSecond),

@@ -90,6 +90,8 @@ struct HistoryView: View {
     @State private var exportFilename = "mac-state-history.csv"
     @State private var isExporting = false
     @State private var exportErrorMessage: String?
+    @State private var showingClearConfirmation = false
+    @State private var clearError: String?
 
     var body: some View {
         ScrollView {
@@ -101,9 +103,27 @@ struct HistoryView: View {
 
                     Spacer()
 
+                    Button(appState.resolvedLanguage == .simplifiedChinese ? "清除历史" : "Clear history") {
+                        showingClearConfirmation = true
+                    }
+                    .alert(isPresented: $showingClearConfirmation) {
+                        Alert(
+                            title: Text(appState.resolvedLanguage == .simplifiedChinese ? "清除已保存的监控历史？" : "Clear saved monitoring history?"),
+                            message: Text(appState.resolvedLanguage == .simplifiedChinese ? "此操作无法撤销。实时监控会继续记录新数据。已导出的 CSV 不受影响。" : "This cannot be undone. Live monitoring will record new samples. Exported CSV files are unaffected."),
+                            primaryButton: .destructive(Text(appState.resolvedLanguage == .simplifiedChinese ? "清除" : "Clear")) {
+                                Task {
+                                    do { try await appState.clearHistory(); clearError = nil }
+                                    catch { clearError = error.localizedDescription }
+                                }
+                            },
+                            secondaryButton: .cancel()
+                        )
+                    }
                     Button(appState.text(.exportCSV), action: prepareExport)
                         .disabled(selectedSamples.isEmpty)
                 }
+
+                if let clearError { Text(clearError) }
 
                 Text(subtitle(for: selectedRange))
                     .foregroundColor(.secondary)
@@ -159,12 +179,12 @@ struct HistoryView: View {
 
                 HistoryMetricCard(
                     title: appState.text(.diskActivity),
-                    subtitle: appState.text(.combinedReadAndWriteThroughput),
+                    subtitle: appState.resolvedLanguage == .simplifiedChinese ? "当前版本不采集磁盘吞吐；仅保留已有历史。" : "Disk throughput is unavailable; only existing history is retained.",
                     tint: .gray,
-                    values: values { Double($0.diskThroughputBytesPerSecond) },
-                    latestText: rateText(for: latestValue { Double($0.diskThroughputBytesPerSecond) }),
-                    averageText: rateText(for: averageValue { Double($0.diskThroughputBytesPerSecond) }),
-                    peakText: rateText(for: peakValue { Double($0.diskThroughputBytesPerSecond) }),
+                    values: values { $0.diskThroughputBytesPerSecond.map(Double.init) },
+                    latestText: rateText(for: selectedSamples.last?.diskThroughputBytesPerSecond.map(Double.init)),
+                    averageText: rateText(for: averageValue { $0.diskThroughputBytesPerSecond.map(Double.init) }),
+                    peakText: rateText(for: peakValue { $0.diskThroughputBytesPerSecond.map(Double.init) }),
                     latestTitle: appState.text(.latest),
                     averageTitle: appState.text(.average),
                     peakTitle: appState.text(.peak)

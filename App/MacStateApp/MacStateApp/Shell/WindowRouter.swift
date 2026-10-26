@@ -4,12 +4,32 @@ import SwiftUI
 @MainActor
 final class WindowRouter {
     private let appState: AppState
+    private var dashboardWindow: NSWindow?
     private var historyWindow: NSWindow?
     private var settingsWindow: NSWindow?
     private var refreshMetrics: (@MainActor () -> Void)?
 
     init(appState: AppState) {
         self.appState = appState
+    }
+
+    func showDashboard(refreshMetrics: @escaping @MainActor () -> Void,
+                       openHistory: @escaping @MainActor () -> Void,
+                       openSettings: @escaping @MainActor () -> Void) {
+        if dashboardWindow == nil {
+            let controller = NSHostingController(rootView: DashboardView(
+                appState: appState, refreshMetrics: refreshMetrics,
+                openHistory: openHistory, openSettings: openSettings
+            ))
+            let window = NSWindow(contentViewController: controller)
+            window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
+            window.setContentSize(NSSize(width: DashboardLayout.popoverWidth, height: 680))
+            window.isReleasedWhenClosed = false
+            dashboardWindow = window
+        }
+        dashboardWindow?.title = appState.text(.dashboard)
+        dashboardWindow?.center()
+        dashboardWindow?.makeKeyAndOrderFront(nil)
     }
 
     func showSettings(refreshMetrics: @escaping @MainActor () -> Void) {

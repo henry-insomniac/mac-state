@@ -25,6 +25,7 @@ private enum SettingsPane: String, CaseIterable, Identifiable {
 struct SettingsView: View {
     @ObservedObject var appState: AppState
     let refreshMetrics: @MainActor () -> Void
+    @State private var showingPrivacy = false
     @State private var selectedPane: SettingsPane = .general
 
     var body: some View {
@@ -170,112 +171,12 @@ struct SettingsView: View {
                             }
                         }
 
-                        SettingsSectionCard(
-                            appState.text(.menuBar),
-                            summary: appState.menuBarSettingsSummaryText
-                        ) {
-                            VStack(alignment: .leading, spacing: 14) {
-                                SettingsControlRow(title: appState.text(.menuBarText)) {
-                                    Picker(
-                                        appState.text(.menuBarText),
-                                        selection: Binding(
-                                            get: { appState.menuBarPresentation.textMode.normalized },
-                                            set: { appState.setMenuBarTextMode($0) }
-                                        )
-                                    ) {
-                                        ForEach(MenuBarTextMode.allCases, id: \.self) { textMode in
-                                            Text(appState.menuBarTextModeTitle(textMode)).tag(textMode)
-                                        }
-                                    }
-                                    .labelsHidden()
-                                    .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
-                                }
-
-                                if appState.menuBarPresentation.textMode.normalized == .selectedMetric {
-                                    SettingsControlRow(title: appState.text(.primaryMetric)) {
-                                        Picker(
-                                            appState.text(.primaryMetric),
-                                            selection: Binding(
-                                                get: { appState.menuBarPresentation.primaryMetric },
-                                                set: { appState.setMenuBarPrimaryMetric($0) }
-                                            )
-                                        ) {
-                                            ForEach(MenuBarPrimaryMetric.allCases, id: \.self) { metric in
-                                                Text(appState.menuBarPrimaryMetricTitle(metric)).tag(metric)
-                                            }
-                                        }
-                                        .labelsHidden()
-                                        .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
-                                    }
-                                }
-
-                                if appState.menuBarPresentation.textMode.normalized == .selectedMetrics {
-                                    SettingsControlRow(
-                                        title: appState.text(.selectedMetrics),
-                                        detail: appState.menuBarSelectedMetricsDetailText
-                                    ) {
-                                        VStack(alignment: .leading, spacing: 8) {
-                                            ForEach(MenuBarPrimaryMetric.allCases, id: \.self) { metric in
-                                                let isSelected = appState.isMenuBarMetricSelected(metric)
-                                                let canSelectMetric = appState.canSelectMenuBarMetric(metric)
-
-                                                Button {
-                                                    appState.setMenuBarMetricSelected(metric, isSelected: isSelected == false)
-                                                } label: {
-                                                    HStack(spacing: 12) {
-                                                        Image(systemName: isSelected ? "checkmark.square.fill" : "square")
-                                                            .imageScale(.medium)
-
-                                                        Text(appState.menuBarPrimaryMetricTitle(metric))
-                                                            .font(.subheadline)
-                                                            .multilineTextAlignment(.leading)
-
-                                                        Spacer(minLength: 12)
-
-                                                        if let selectionOrder = appState.menuBarMetricSelectionOrderText(for: metric) {
-                                                            Text(selectionOrder)
-                                                                .font(.caption)
-                                                                .bold()
-                                                                .frame(width: 22, height: 22)
-                                                                .background(
-                                                                    RoundedRectangle(cornerRadius: 11, style: .continuous)
-                                                                        .fill(Color.primary.opacity(0.08))
-                                                                )
-                                                                .clipShape(.rect(cornerRadius: 11))
-                                                        }
-                                                    }
-                                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                                    .padding(.horizontal, 12)
-                                                    .padding(.vertical, 10)
-                                                    .background(
-                                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                                            .fill(Color.primary.opacity(isSelected ? 0.08 : 0.03))
-                                                    )
-                                                    .overlay(
-                                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                                            .strokeBorder(Color.primary.opacity(isSelected ? 0.16 : 0.06), lineWidth: 1)
-                                                    )
-                                                }
-                                                .buttonStyle(.plain)
-                                                .disabled(canSelectMetric == false)
-                                                .opacity(canSelectMetric || isSelected ? 1 : 0.45)
-                                            }
-                                        }
-                                        .frame(width: SettingsLayout.valueColumnWidth, alignment: .trailing)
-                                    }
-                                }
-
-                                Text("\(appState.text(.preview)): \(appState.menuBarPreviewText)")
-                                    .font(.subheadline)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 10)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                            .fill(Color.primary.opacity(0.04))
-                                    )
-                                    .clipShape(.rect(cornerRadius: 12))
-                            }
+                        NotchSettingsView(appState: appState)
+                        Button(appState.resolvedLanguage == .simplifiedChinese ? "隐私与支持" : "Privacy & support") {
+                            showingPrivacy = true
+                        }
+                        .sheet(isPresented: $showingPrivacy) {
+                            AppPrivacyView(chinese: appState.resolvedLanguage == .simplifiedChinese)
                         }
 
                     case .dashboard:
@@ -493,40 +394,8 @@ struct SettingsView: View {
 
                                 Divider()
 
-                                VStack(alignment: .leading, spacing: 12) {
-                                    SettingsControlRow(title: appState.text(.alertWhenDiskActivityHigh)) {
-                                        Toggle(
-                                            appState.text(.yes),
-                                            isOn: Binding(
-                                                get: { appState.alertConfiguration.diskActivityHigh.isEnabled },
-                                                set: { appState.setDiskAlertEnabled($0) }
-                                            )
-                                        )
-                                        .labelsHidden()
-                                    }
-
-                                    SettingsControlRow(title: appState.text(.diskThreshold)) {
-                                        HStack(spacing: 10) {
-                                            Text("\(appState.alertConfiguration.diskActivityHigh.thresholdMegabytesPerSecond) MB/s")
-                                                .font(.system(.body, design: .monospaced))
-                                                .frame(minWidth: 88, alignment: .trailing)
-
-                                            Stepper(
-                                                "",
-                                                value: Binding(
-                                                    get: { appState.alertConfiguration.diskActivityHigh.thresholdMegabytesPerSecond },
-                                                    set: { appState.setDiskAlertThreshold($0) }
-                                                ),
-                                                in: 10...2_000,
-                                                step: 10
-                                            )
-                                            .labelsHidden()
-                                        }
-                                        .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
-                                        .disabled(appState.alertConfiguration.diskActivityHigh.isEnabled == false)
-                                    }
-                                }
-
+                                Text(appState.unavailableDiskActivityText)
+                                    .font(.subheadline)
                                 Divider()
 
                                 SettingsControlRow(title: appState.text(.alertCooldown)) {

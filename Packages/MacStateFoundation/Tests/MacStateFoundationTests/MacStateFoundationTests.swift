@@ -110,3 +110,13 @@ import Foundation
     #expect(orderedModules.contains { $0.type == .alerts && $0.isVisible })
     #expect(orderedModules.contains { $0.type == .battery && $0.isVisible })
 }
+
+@Test func sharedSnapshotStoreReportsWriteFailureWithoutInventingData() throws {
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    // A directory cannot be atomically replaced by a snapshot file.
+    let store = SharedWidgetSnapshotStore(fileURL: directory)
+    #expect(store.save(.placeholder) == false)
+    #expect(store.load() == nil)
+}

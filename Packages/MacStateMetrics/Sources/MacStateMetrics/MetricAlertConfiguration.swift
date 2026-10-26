@@ -25,7 +25,6 @@ public struct MetricAlertConfiguration: Sendable, Equatable, Codable {
         cpuHighUsage.isEnabled
             || memoryHighUsage.isEnabled
             || batteryLowLevel.isEnabled
-            || diskActivityHigh.isEnabled
     }
 
     public var clampedCooldownMinutes: Int {

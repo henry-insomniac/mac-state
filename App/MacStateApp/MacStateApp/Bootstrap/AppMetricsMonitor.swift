@@ -2,6 +2,7 @@ import Foundation
 import MacStateFoundation
 import MacStateMetrics
 import MacStateStorage
+import WidgetKit
 
 @MainActor
 final class AppMetricsMonitor {
@@ -9,7 +10,9 @@ final class AppMetricsMonitor {
     private let metricsProvider: any MetricsSnapshotProviding
     private let historyStore: MetricHistoryStore
     private let alertNotificationService: AlertNotificationService
-    private let sharedWidgetSnapshotStore: SharedWidgetSnapshotStore
+    private var sharedWidgetSnapshotStore: SharedWidgetSnapshotStore?
+    private var widgetDeliveryPolicy = WidgetDeliveryPolicy()
+    private var isRefreshing = false
     private var refreshTask: Task<Void, Never>?
 
     init(
@@ -17,7 +20,7 @@ final class AppMetricsMonitor {
         metricsProvider: any MetricsSnapshotProviding = LiveMetricsProvider(),
         historyStore: MetricHistoryStore = MetricHistoryStore(),
         alertNotificationService: AlertNotificationService = AlertNotificationService(),
-        sharedWidgetSnapshotStore: SharedWidgetSnapshotStore = SharedWidgetSnapshotStore()
+        sharedWidgetSnapshotStore: SharedWidgetSnapshotStore? = nil
     ) {
         self.appState = appState
         self.metricsProvider = metricsProvider
@@ -60,7 +63,11 @@ final class AppMetricsMonitor {
 
         while !Task.isCancelled {
             do {
-                try await Task.sleep(nanoseconds: 2_000_000_000)
+                if #available(macOS 13.0, *) {
+                    try await Task.sleep(for: .seconds(2))
+                } else {
+                    try await Task.sleep(nanoseconds: 2_000_000_000)
+                }
             } catch {
                 break
             }
@@ -70,6 +77,9 @@ final class AppMetricsMonitor {
     }
 
     private func refreshMetrics() async {
+        guard !isRefreshing else { return }
+        isRefreshing = true
+        defer { isRefreshing = false }
         do {
             let snapshot = try await metricsProvider.snapshot()
             let historyTimeline = await historyStore.append(snapshot: snapshot)
@@ -78,7 +88,7 @@ final class AppMetricsMonitor {
             appState.apply(snapshot)
             appState.applyHistory(historyTimeline)
             appState.setErrorMessage(nil)
-            sharedWidgetSnapshotStore.save(WidgetSnapshot(snapshot: snapshot))
+            await saveWidgetSnapshotIfNeeded(snapshot)
 
             if alertConfiguration.hasEnabledRules {
                 await alertNotificationService.requestAuthorizationIfNeeded()
@@ -102,6 +112,41 @@ final class AppMetricsMonitor {
                     ? "无法读取系统指标"
                     : "Unable to read system metrics"
             )
+        }
+    }
+
+    private func saveWidgetSnapshotIfNeeded(_ snapshot: MetricSnapshot) async {
+        let date = snapshot.timestamp
+        if widgetDeliveryPolicy.shouldCheckConfiguration(at: date) {
+            let hasWidget = await hasConfiguredMetricOverviewWidget()
+            widgetDeliveryPolicy.recordConfiguration(hasWidget: hasWidget, at: date)
+        }
+        guard widgetDeliveryPolicy.beginWrite(at: date) else { return }
+        if sharedWidgetSnapshotStore == nil {
+            sharedWidgetSnapshotStore = SharedWidgetSnapshotStore()
+        }
+        guard sharedWidgetSnapshotStore?.save(WidgetSnapshot(snapshot: snapshot)) == true else { return }
+        if widgetDeliveryPolicy.shouldReloadAfterSuccessfulWrite(at: date) {
+            WidgetCenter.shared.reloadTimelines(ofKind: SharedDataConfiguration.metricOverviewWidgetKind)
+        }
+    }
+
+    private func hasConfiguredMetricOverviewWidget() async -> Bool {
+        await withCheckedContinuation { continuation in
+            WidgetCenter.shared.getCurrentConfigurations { result in
+                let hasConfiguredWidget: Bool
+
+                switch result {
+                case let .success(configurations):
+                    hasConfiguredWidget = configurations.contains { configuration in
+                        configuration.kind == SharedDataConfiguration.metricOverviewWidgetKind
+                    }
+                case .failure:
+                    hasConfiguredWidget = false
+                }
+
+                continuation.resume(returning: hasConfiguredWidget)
+            }
         }
     }
 }

@@ -8,8 +8,8 @@ public struct WidgetSnapshot: Codable, Sendable, Equatable {
     public let memoryTotalBytes: UInt64
     public let diskUsedBytes: UInt64
     public let diskTotalBytes: UInt64
-    public let diskReadBytesPerSecond: UInt64
-    public let diskWriteBytesPerSecond: UInt64
+    public let diskReadBytesPerSecond: UInt64?
+    public let diskWriteBytesPerSecond: UInt64?
     public let networkDownloadBytesPerSecond: UInt64
     public let networkUploadBytesPerSecond: UInt64
     public let activeNetworkInterfaces: Int
@@ -27,8 +27,8 @@ public struct WidgetSnapshot: Codable, Sendable, Equatable {
         memoryTotalBytes: UInt64,
         diskUsedBytes: UInt64,
         diskTotalBytes: UInt64,
-        diskReadBytesPerSecond: UInt64,
-        diskWriteBytesPerSecond: UInt64,
+        diskReadBytesPerSecond: UInt64?,
+        diskWriteBytesPerSecond: UInt64?,
         networkDownloadBytesPerSecond: UInt64,
         networkUploadBytesPerSecond: UInt64,
         activeNetworkInterfaces: Int,

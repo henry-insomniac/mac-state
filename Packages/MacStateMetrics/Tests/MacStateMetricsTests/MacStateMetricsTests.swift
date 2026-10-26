@@ -14,8 +14,8 @@ import MacStateFoundation
     #expect(snapshot.memoryUsedBytes <= snapshot.memoryTotalBytes)
     #expect(snapshot.disk.usedBytes <= snapshot.disk.totalBytes)
     #expect(snapshot.disk.freeBytes <= snapshot.disk.totalBytes)
-    #expect(snapshot.disk.readBytesPerSecond >= 0)
-    #expect(snapshot.disk.writeBytesPerSecond >= 0)
+    #expect(snapshot.disk.readBytesPerSecond != nil)
+    #expect(snapshot.disk.writeBytesPerSecond != nil)
     #expect(snapshot.networkDownloadBytesPerSecond >= 0)
     #expect(snapshot.networkUploadBytesPerSecond >= 0)
     #expect(snapshot.processes.isEmpty == false)
@@ -217,4 +217,17 @@ import MacStateFoundation
     #expect(ThermalCondition(processInfoThermalState: .fair) == .fair)
     #expect(ThermalCondition(processInfoThermalState: .serious) == .serious)
     #expect(ThermalCondition(processInfoThermalState: .critical) == .critical)
+}
+
+@Test func unavailableDiskReadDoesNotBecomeZeroThroughput() {
+    let disk = DiskSnapshot(usedBytes: 10, freeBytes: 90, totalBytes: 100,
+                            readBytesPerSecond: nil, writeBytesPerSecond: 50)
+    #expect(disk.throughputBytesPerSecond == nil)
+}
+
+@Test func sensorBridgeOnlyExposesPublicThermalState() {
+    let sensors = SensorBridge().snapshot(platform: .current)
+    #expect(sensors.source == .publicThermalState)
+    #expect(sensors.hasTemperatureTelemetry == false)
+    #expect(sensors.hasFanTelemetry == false)
 }

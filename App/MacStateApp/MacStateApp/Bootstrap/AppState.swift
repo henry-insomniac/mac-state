@@ -33,8 +33,8 @@ final class AppState: ObservableObject {
     @Published private(set) var diskUsedBytes: UInt64 = 0
     @Published private(set) var diskFreeBytes: UInt64 = 0
     @Published private(set) var diskTotalBytes: UInt64 = 0
-    @Published private(set) var diskReadBytesPerSecond: UInt64 = 0
-    @Published private(set) var diskWriteBytesPerSecond: UInt64 = 0
+    @Published private(set) var diskReadBytesPerSecond: UInt64?
+    @Published private(set) var diskWriteBytesPerSecond: UInt64?
     @Published private(set) var networkDownloadBytesPerSecond: UInt64 = 0
     @Published private(set) var networkUploadBytesPerSecond: UInt64 = 0
     @Published private(set) var activeNetworkInterfaces = 0
@@ -485,22 +485,28 @@ final class AppState: ObservableObject {
             : "\(storageString(from: diskUsedBytes)) / \(storageString(from: diskTotalBytes)) used"
     }
 
+    var unavailableDiskActivityText: String {
+        resolvedLanguage == .simplifiedChinese ? "磁盘吞吐不可用" : "Disk throughput unavailable"
+    }
+
     var diskReadRateText: String {
-        rateString(from: diskReadBytesPerSecond)
+        diskReadBytesPerSecond.map { rateString(from: $0) } ?? unavailableDiskActivityText
     }
 
     var diskWriteRateText: String {
-        rateString(from: diskWriteBytesPerSecond)
+        diskWriteBytesPerSecond.map { rateString(from: $0) } ?? unavailableDiskActivityText
     }
 
     var diskActivityText: String {
-        resolvedLanguage == .simplifiedChinese
+        guard diskReadBytesPerSecond != nil, diskWriteBytesPerSecond != nil else { return unavailableDiskActivityText }
+        return resolvedLanguage == .simplifiedChinese
             ? "读取 \(diskReadRateText) • 写入 \(diskWriteRateText)"
             : "Read \(diskReadRateText) • Write \(diskWriteRateText)"
     }
 
     var combinedDiskRateText: String {
-        resolvedLanguage == .simplifiedChinese
+        guard diskReadBytesPerSecond != nil, diskWriteBytesPerSecond != nil else { return unavailableDiskActivityText }
+        return resolvedLanguage == .simplifiedChinese
             ? "读 \(diskReadRateText) 写 \(diskWriteRateText)"
             : "R \(diskReadRateText) W \(diskWriteRateText)"
     }
@@ -701,7 +707,7 @@ final class AppState: ObservableObject {
     }
 
     var diskTrendValues: [Double] {
-        historySamples.map { Double($0.diskThroughputBytesPerSecond) }
+        historySamples.compactMap { $0.diskThroughputBytesPerSecond.map(Double.init) }
     }
 
     var batteryTrendValues: [Double] {
@@ -1037,6 +1043,11 @@ final class AppState: ObservableObject {
         lastUpdatedAt = snapshot.timestamp
     }
 
+    func clearHistory() async throws {
+        try await historyStore.clear()
+        applyHistory(await historyStore.timeline())
+    }
+
     func applyHistory(_ timeline: MetricHistoryArchive) {
         historySamples = timeline.recentSamples
         dayHistorySamples = timeline.daySamples
@@ -1064,7 +1075,7 @@ final class AppState: ObservableObject {
         case .networkUpload:
             uploadRateText
         case .diskActivity:
-            rateString(from: diskReadBytesPerSecond + diskWriteBytesPerSecond)
+            combinedDiskRateText
         case .batteryLevel:
             batterySnapshot == nil ? (resolvedLanguage == .simplifiedChinese ? "无" : "n/a") : batteryStatusText
         }
