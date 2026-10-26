@@ -26,4 +26,4 @@ MACSTATE_NOTARY_PROFILE=mac-state-notary scripts/package-dmg.sh \
 
 脚本验证三个组件的签名、双架构及 Hardened Runtime，加入许可证，签名 DMG、提交公证、附加并验证票据，通过 Gatekeeper 后才输出最终文件及 SHA-256。
 
-不提交私钥、密码或公证凭据。没有提交、推送应用代码或发布 GitHub Release。签名与公证验证不等同于已完成 Intel 真机、旧版 macOS、Widget 系统刷新及整机重启测试。
+不提交私钥、密码或公证凭据。用户随后授权发布 GitHub：源码及新版主页已推送 main，`v1.1.0` Release 已公开，包含 DMG、SHA-256 和 ZIP；主页及 README 下载入口均指向本次 DMG。签名与公证验证不等同于已完成 Intel 真机、旧版 macOS、Widget 系统刷新及整机重启测试。
